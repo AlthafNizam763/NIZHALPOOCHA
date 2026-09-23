@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// Firestore security rules for Nizhalpoocha.
+// Live match state never lives in Firestore; the game server (Admin SDK, which
+// bypasses these rules) writes stats, match records and the leaderboard.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Profile fields a client may write. xp, coins and stats are server-only.
+    function onlyProfileFields() {
+      return request.resource.data.diff(resource == null ? {} : resource.data).affectedKeys()
+        .hasOnly(['username', 'appearance', 'isGuest', 'createdAt', 'updatedAt', 'settings']);
+    }
+    function validUsername() {
+      return !('username' in request.resource.data) ||
+        (request.resource.data.username is string &&
+         request.resource.data.username.size() >= 2 &&
+         request.resource.data.username.size() <= 16);
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create: if isSelf(uid) && onlyProfileFields() && validUsername();
+      allow update: if isSelf(uid) && onlyProfileFields() && validUsername();
+      allow delete: if false;
+    }
+
+    // Public leaderboard projection — contains no role information.
+    match /leaderboard/{uid} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Finished matches (roles are revealed post-game). Only participants may read.
+    match /matches/{matchId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.playerIds;
+      allow write: if false;
+    }
+
+    match /matchPlayers/{id} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Social collections (Milestone 14) — owner-scoped until the feature ships.
+    match /friends/{uid}/list/{friendUid} {
+      allow read: if isSelf(uid);
+      allow write: if false;
+    }
+    match /friendRequests/{id} {
+      allow read: if signedIn() && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.from == request.auth.uid;
+      allow update, delete: if false;
+    }
+    match /notifications/{uid}/items/{id} {
+      allow read: if isSelf(uid);
+      allow write: if false;
+    }
+    match /achievements/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /settings/{uid} {
+      allow read, write: if isSelf(uid);
+    }
+  }
+}

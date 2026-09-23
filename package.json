@@ -1,0 +1,28 @@
+{
+  "name": "nizhalpoocha",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Nizhalpoocha — a hidden-role multiplayer mystery set in monsoon Kerala.",
+  "workspaces": [
+    "shared",
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c yellow,cyan \"npm run dev -w server\" \"npm run dev -w web\"",
+    "dev:server": "npm run dev -w server",
+    "dev:web": "npm run dev -w web",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w web",
+    "test": "npm run test -w server",
+    "build": "npm run build -w server && npm run build -w web",
+    "sim": "npm run sim -w server",
+    "emulators": "firebase emulators:start --project demo-nizhalpoocha --only auth,firestore,database"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

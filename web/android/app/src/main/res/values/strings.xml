@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Nizhalpoocha</string>
+    <string name="title_activity_main">Nizhalpoocha</string>
+    <string name="package_name">com.nizhalpoocha.game</string>
+    <string name="custom_url_scheme">com.nizhalpoocha.game</string>
+</resources>

@@ -1,0 +1,18 @@
+node_modules/
+.next/
+out/
+dist/
+*.log
+.env
+.env.local
+.env.*.local
+server/.env
+web/.env.local
+serviceAccount*.json
+*.tsbuildinfo
+.DS_Store
+web/android/app/build/
+web/ios/App/Pods/
+
+# Firebase emulator logs
+*-debug.log

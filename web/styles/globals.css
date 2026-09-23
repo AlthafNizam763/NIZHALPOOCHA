@@ -1,0 +1,160 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #0e1512;
+  --color-night: #131c19;
+  --color-panel: #19231f;
+  --color-panel-2: #212d28;
+  --color-line: #2e3c36;
+  --color-moss: #3f7d5c;
+  --color-moss-deep: #2f6b4f;
+  --color-leaf: #7bb592;
+  --color-rain: #8a9aa3;
+  --color-mist: #b6c1bd;
+  --color-paper: #ece6d6;
+  --color-lamp: #e9b04f;
+  --color-laterite: #b5573a;
+  --color-canal: #3f6f86;
+
+  --font-display: 'Baloo Chettan 2', 'Noto Sans Malayalam', system-ui, sans-serif;
+  --font-body: 'Manrope', 'Noto Sans Malayalam', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+  font-size: 16px;
+}
+:root.large-text {
+  font-size: 18px;
+}
+
+html,
+body {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+}
+.pl-safe {
+  padding-left: max(env(safe-area-inset-left), 0.75rem);
+}
+.pr-safe {
+  padding-right: max(env(safe-area-inset-right), 0.75rem);
+}
+
+/* Light monsoon rain for menu screens (disabled for reduced motion). */
+.menu-rain {
+  background-image: repeating-linear-gradient(
+    103deg,
+    transparent 0 22px,
+    rgba(201, 216, 224, 0.07) 22px 23px,
+    transparent 23px 47px
+  );
+  background-size: 120px 120px;
+  animation: menu-rain 0.55s linear infinite;
+}
+@keyframes menu-rain {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -26px 120px;
+  }
+}
+
+@keyframes rotate-phone {
+  0%,
+  20% {
+    transform: rotate(0deg);
+  }
+  50%,
+  80% {
+    transform: rotate(-90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.animate-rotate-phone {
+  animation: rotate-phone 2.6s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.35s ease-out both;
+}
+
+@keyframes reveal-fade {
+  0% {
+    opacity: 1;
+    filter: none;
+  }
+  45% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes cat-emerge {
+  0%,
+  45% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  70%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-human-fade {
+  animation: reveal-fade 2.6s ease-in-out forwards;
+}
+.animate-cat-emerge {
+  animation: cat-emerge 2.6s ease-in-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-rain,
+  .animate-rotate-phone,
+  .animate-rise {
+    animation: none;
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
