@@ -80,7 +80,7 @@ export class RoomManager {
     }
     if (current) return { ok: false, error: 'ALREADY_IN_ROOM' };
     const r = room.addMember(playerId, name, appearance);
-    if (!r.ok) return r;
+    if (r.ok === false) return { ok: false, error: r.error };
     this.playerRoom.set(playerId, code);
     return { ok: true, room };
   }
