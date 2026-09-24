@@ -135,7 +135,7 @@ export function MeetingScreen() {
         })}
         <div ref={chatEnd} />
       </div>
-      <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+      <div data-tut="quick-chat" className="mt-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
         {QUICK_CHAT_IDS.map((q) => (
           <button key={q} onClick={() => void send({ quickId: q })} className="h-8 shrink-0 rounded-full border border-line bg-night px-3 text-xs text-mist hover:text-paper">
             {t(`quick.${q}` as I18nKey)}
@@ -172,7 +172,7 @@ export function MeetingScreen() {
           <span className={`rounded-lg px-3 py-1 text-sm font-semibold ${voting ? 'bg-lamp text-ink' : 'bg-panel-2 text-paper'}`}>
             {voting ? t('meeting.voting') : t('meeting.discussion')} · {secs}s
           </span>
-          <button onClick={() => setShowChat(!showChat)} className="relative h-10 rounded-xl border border-line bg-panel px-3 text-sm md:hidden">
+          <button onClick={() => setShowChat(!showChat)} data-tut="quick-chat" className="relative h-10 rounded-xl border border-line bg-panel px-3 text-sm md:hidden">
             {t('meeting.chat')}
             {chat.length > 0 && <span className="ml-1 text-lamp">{chat.length}</span>}
           </button>
@@ -181,7 +181,7 @@ export function MeetingScreen() {
 
       <div className="grid min-h-0 flex-1 gap-3 p-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className={`min-h-0 flex-col ${showChat ? 'hidden md:flex' : 'flex'}`}>
-          <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto scrollbar-thin sm:grid-cols-3 lg:grid-cols-4">
+          <div data-tut="vote-grid" className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto scrollbar-thin sm:grid-cols-3 lg:grid-cols-4">
             {players.map((p) => (
               <PlayerCard
                 key={p.id}

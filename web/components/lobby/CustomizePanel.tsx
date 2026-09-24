@@ -44,11 +44,13 @@ export function CustomizePanel({
   initial,
   onSave,
   saving,
+  saveLabel = 'common.save',
 }: {
   initialName: string;
   initial: Appearance;
   onSave: (name: string, a: Appearance) => void;
   saving?: boolean;
+  saveLabel?: I18nKey;
 }) {
   const t = useT();
   const [a, setA] = useState<Appearance>(initial);
@@ -119,7 +121,7 @@ export function CustomizePanel({
           </div>
         </div>
         <Button full loading={saving} onClick={() => onSave(name.trim(), a)} disabled={name.trim().length < 2}>
-          {t('common.save')}
+          {t(saveLabel)}
         </Button>
       </div>
     </div>

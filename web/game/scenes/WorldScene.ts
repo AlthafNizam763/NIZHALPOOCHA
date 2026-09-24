@@ -86,6 +86,8 @@ export class WorldScene extends Phaser.Scene {
   private userZoom = 1;
   private unsubs: (() => void)[] = [];
   private nextLightning = 0;
+  private printsLayer: Phaser.GameObjects.Graphics | null = null;
+  private printCount = -1;
 
   constructor() {
     super('world');
@@ -106,6 +108,14 @@ export class WorldScene extends Phaser.Scene {
     this.markers = this.add.graphics().setDepth(DEPTH.markers);
     this.killRing = this.add.graphics().setDepth(DEPTH.bodies - 1);
 
+    const tut = bridge.tutorial;
+    if (tut) {
+      this.cameras.main.setBounds(tut.bounds.x, tut.bounds.y, tut.bounds.w, tut.bounds.h);
+      this.drawBarriers(tut.barriers);
+      // Below the darkness: footprints only show inside the player's light.
+      this.printsLayer = this.add.graphics().setDepth(3);
+    }
+
     // Night vision: a soft-edged mask image around the player plus four fills
     // covering the rest of the view. No per-frame render targets (cheap on phones).
     this.visionMask = this.add.image(0, 0, 'visionMask').setDepth(DEPTH.darkness);
@@ -117,6 +127,7 @@ export class WorldScene extends Phaser.Scene {
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => {
       this.userZoom = Phaser.Math.Clamp(this.userZoom - dy * 0.001, 0.75, 1.35);
+      bridge.zoomChanges++;
       this.applyZoom();
     });
 
@@ -415,9 +426,10 @@ export class WorldScene extends Phaser.Scene {
 
   private collidersFor(x: number, y: number): readonly Rect[] {
     const locked = useGame.getState().state?.lockedDoorIds ?? [];
-    if (!locked.length) return this.map.colliders;
+    const barriers = bridge.tutorial?.barriers ?? [];
+    if (!locked.length && !barriers.length) return this.map.colliders;
     const doors = this.map.doors.filter((d) => locked.includes(d.id) && !boxOverlapsRect(x, y, GAME.PLAYER_HALF, d));
-    return [...this.map.colliders, ...doors];
+    return [...this.map.colliders, ...barriers, ...doors];
   }
 
   private moveLocal(me: Actor, dt: number, frozen: boolean, alive: boolean, now: number): void {
@@ -630,12 +642,76 @@ export class WorldScene extends Phaser.Scene {
     // Alarm bell ring
     const e = this.map.emergency;
     g.lineStyle(2, 0xc99a3b, 0.35 + pulse * 0.2).strokeCircle(e.x, e.y, 26);
+    this.drawTutorial(g, time, pulse);
 
     this.killRing.clear();
     if (actions.killTargetId) {
       const target = this.remotes.get(actions.killTargetId);
       if (target) this.killRing.lineStyle(2, 0xb5573a, 0.9).strokeEllipse(target.x, target.y, 40, 16);
     }
+  }
+
+  // ── Tutorial layers ──────────────────────────────────────────────────
+  /** Flood barricades closing off the tutorial corner of town. */
+  private drawBarriers(barriers: readonly Rect[]): void {
+    const g = this.add.graphics().setDepth(6);
+    for (const b of barriers) {
+      g.fillStyle(0x1b1712, 1).fillRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4);
+      const vertical = b.h > b.w;
+      const len = vertical ? b.h : b.w;
+      for (let i = 0; i < len; i += 22) {
+        const s = Math.min(11, len - i);
+        g.fillStyle(0xd8b640, 1);
+        if (vertical) g.fillRect(b.x, b.y + i, b.w, s);
+        else g.fillRect(b.x + i, b.y, s, b.h);
+      }
+    }
+  }
+
+  private drawPrint(g: Phaser.GameObjects.Graphics, p: { x: number; y: number; a: number; kind: 'paw' | 'shoe' }): void {
+    // Local (forward, right) offsets rotated by the heading.
+    const fx = Math.cos(p.a);
+    const fy = Math.sin(p.a);
+    const at = (f: number, r: number): [number, number] => [p.x + fx * f - fy * r, p.y + fy * f + fx * r];
+    g.fillStyle(0x070c0b, 0.62);
+    if (p.kind === 'paw') {
+      g.fillCircle(...at(0, 0), 4);
+      for (const [f, r] of [[6, -4], [8, -1.5], [8, 1.5], [6, 4]] as const) g.fillCircle(...at(f, r), 1.8);
+    } else {
+      g.fillCircle(...at(4, 0), 3.8);
+      g.fillCircle(...at(-4, 0), 3);
+    }
+  }
+
+  private drawTutorial(g: Phaser.GameObjects.Graphics, time: number, pulse: number): void {
+    const tut = bridge.tutorial;
+    if (!tut) return;
+    if (this.printsLayer && tut.prints.length !== this.printCount) {
+      this.printCount = tut.prints.length;
+      this.printsLayer.clear();
+      for (const p of tut.prints) this.drawPrint(this.printsLayer, p);
+    }
+    for (const c of tut.clues) {
+      if (c.found) continue;
+      g.lineStyle(2, 0x9fd3e6, pulse).strokeCircle(c.x, c.y, 14 + pulse * 4);
+      g.fillStyle(0x9fd3e6, pulse).fillCircle(c.x, c.y - 26, 4);
+    }
+    const target = tut.guide;
+    if (!target || !this.me) return;
+    g.lineStyle(3, PALETTE.lamp, 0.5 + pulse * 0.4).strokeCircle(target.x, target.y, 22 + pulse * 8);
+    // Chevron orbiting the player, pointing at the objective.
+    const ox = this.me.x;
+    const oy = this.me.y - 20;
+    const dx = target.x - ox;
+    const dy = target.y - oy;
+    const d = Math.hypot(dx, dy);
+    if (d < 140) return;
+    const ux = dx / d;
+    const uy = dy / d;
+    const r = 62 + Math.sin(time / 180) * 6;
+    const cx = ox + ux * r;
+    const cy = oy + uy * r;
+    g.fillStyle(PALETTE.lamp, 0.95).fillTriangle(cx + ux * 14, cy + uy * 14, cx - ux * 8 - uy * 10, cy - uy * 8 + ux * 10, cx - ux * 8 + uy * 10, cy - uy * 8 - ux * 10);
   }
 
   private computeProximity(me: Actor, alive: boolean, playing: boolean): void {

@@ -17,6 +17,8 @@ export interface SettingsState {
   showOnline: boolean;
   voiceVolume: number;
   pushToTalk: boolean;
+  /** Spoken narration for the story intro and tutorial (device text-to-speech). */
+  narration: boolean;
   set: (patch: Partial<Omit<SettingsState, 'set'>>) => void;
 }
 
@@ -36,8 +38,9 @@ export const useSettings = create<SettingsState>()(
       showOnline: true,
       voiceVolume: 0.9,
       pushToTalk: false,
+      narration: false,
       set: (patch) => set(patch),
     }),
-    { name: 'nz-settings', version: 2, migrate: (s) => ({ voiceVolume: 0.9, pushToTalk: false, ...(s as object) }) as SettingsState },
+    { name: 'nz-settings', version: 3, migrate: (s) => ({ voiceVolume: 0.9, pushToTalk: false, narration: false, ...(s as object) }) as SettingsState },
   ),
 );

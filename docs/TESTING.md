@@ -54,3 +54,4 @@ result on every client, **leak audit** of every Human's traffic, room back to lo
 | Spectator | get eliminated → free roam / follow, dead-only chat, cannot vote |
 | Orientation | phone in portrait during a match → rotate prompt |
 | Malayalam | Settings → Language → മലയാളം |
+| First-run flow | new guest → story intro (Skip → ~13 s recap) → tutorial (8 lessons, offline) → character setup → Home; reload → straight to Home. Replay both from Home → Story |

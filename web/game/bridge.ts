@@ -1,6 +1,18 @@
-import type { PositionSnapshot } from '@nizhal/shared';
+import type { Point, PositionSnapshot, Rect } from '@nizhal/shared';
 
 type SnapshotListener = (s: PositionSnapshot, receivedAt: number) => void;
+
+/** Extra world layers the offline tutorial draws on top of the real map. */
+export interface TutorialWorld {
+  /** Playable area: the camera stays inside it and barriers close it off. */
+  bounds: Rect;
+  barriers: Rect[];
+  /** Where the guide arrow points, or null. */
+  guide: Point | null;
+  /** Footprints for the investigation lesson (a = heading in radians). */
+  prints: { x: number; y: number; a: number; kind: 'paw' | 'shoe' }[];
+  clues: { id: string; x: number; y: number; found: boolean }[];
+}
 
 /**
  * Tiny mutable bridge between React/network code and the Phaser scene.
@@ -16,6 +28,10 @@ export const bridge = {
   lastSnapshot: null as { snap: PositionSnapshot; at: number } | null,
   /** Forced position from the server (spawn, meeting reset, correction). */
   pendingTeleport: null as { x: number; y: number } | null,
+  /** Set only while the offline tutorial runs. */
+  tutorial: null as TutorialWorld | null,
+  /** Bumped whenever the player zooms the camera. */
+  zoomChanges: 0,
 
   pushSnapshot(snap: PositionSnapshot): void {
     const at = performance.now();

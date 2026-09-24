@@ -162,3 +162,69 @@ button {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line) transparent;
 }
+
+/* Title screen */
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.1); }
+}
+@keyframes idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes eyes-glow {
+  0%, 40%, 100% { opacity: 0; }
+  48%, 88% { opacity: 1; }
+  92% { opacity: 0.1; }
+  95% { opacity: 1; }
+}
+svg ellipse.animate-\[blink_5s_infinite\] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.animate-idle {
+  animation: idle-bob 3.2s ease-in-out infinite;
+}
+.animate-eyes {
+  animation: eyes-glow 9s ease-in-out infinite;
+}
+.octagon {
+  clip-path: polygon(29% 0, 71% 0, 100% 29%, 100% 71%, 71% 100%, 29% 100%, 0 71%, 0 29%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-idle,
+  .animate-eyes {
+    animation: none;
+  }
+}
+
+/* Story intro recap: progress segment filling over one slide */
+@keyframes recap-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+.recap-fill {
+  animation: recap-fill linear forwards;
+}
+
+/* Tutorial: pulsing ring around the UI element the coach points at */
+@keyframes tut-ring {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(233, 176, 79, 0.95), 0 0 18px 4px rgba(233, 176, 79, 0.45); }
+  50% { box-shadow: 0 0 0 5px rgba(233, 176, 79, 0.6), 0 0 28px 8px rgba(233, 176, 79, 0.25); }
+}
+.tut-ring {
+  animation: tut-ring 1.2s ease-in-out infinite;
+}
+@keyframes tut-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.tut-bounce {
+  animation: tut-bounce 0.9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tut-ring,
+  .tut-bounce {
+    animation: none;
+  }
+}

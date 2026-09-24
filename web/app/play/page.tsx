@@ -1,6 +1,5 @@
 'use client';
 import { useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/state/authStore';
 import { useGame } from '@/state/gameStore';
 import { useSettings } from '@/state/settingsStore';
@@ -8,6 +7,7 @@ import { useT } from '@/hooks/useT';
 import { useIsTouch } from '@/hooks/useDevice';
 import { useRequireAuth, useRoomRedirect } from '@/hooks/useRoute';
 import { bridge } from '@/game/bridge';
+import { lockLandscape } from '@/services/orientation';
 import { GameCanvas } from '@/components/game/GameCanvas';
 import { ActionButtons, SpectatorBar, TaskPanel, TopCenter, TopRight } from '@/components/game/Hud';
 import { Joystick } from '@/components/game/Joystick';
@@ -17,13 +17,6 @@ import { MeetingScreen, VoteResultView } from '@/components/game/Meeting';
 import { GameOver } from '@/components/game/GameOver';
 import { MonsoonBackdrop } from '@/components/ui/Backdrop';
 import { Spinner } from '@/components/ui/Controls';
-
-async function lockLandscape(lock: boolean) {
-  if (!Capacitor.isNativePlatform()) return;
-  const { ScreenOrientation } = await import('@capacitor/screen-orientation');
-  if (lock) await ScreenOrientation.lock({ orientation: 'landscape' }).catch(() => {});
-  else await ScreenOrientation.unlock().catch(() => {});
-}
 
 export default function PlayPage() {
   const ready = useRequireAuth();

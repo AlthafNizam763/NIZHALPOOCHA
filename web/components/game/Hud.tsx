@@ -97,7 +97,7 @@ export function TopRight() {
     <div className="pointer-events-auto flex items-center gap-2">
       <VoiceControls compact />
       <span className={`rounded-md bg-ink/70 px-2 py-1 text-xs tabular-nums ${pingColor}`}>{ping === null ? '—' : t('hud.ping', { n: ping })}</span>
-      <button onClick={() => setPanel('map')} className="h-11 rounded-xl border border-line bg-ink/80 px-3 text-sm">
+      <button onClick={() => setPanel('map')} data-tut="map" className="h-11 rounded-xl border border-line bg-ink/80 px-3 text-sm">
         {t('hud.map')}
       </button>
       <button onClick={() => setPanel('menu')} className="h-11 w-11 rounded-xl border border-line bg-ink/80 text-lg" aria-label={t('hud.menu')}>
@@ -108,7 +108,24 @@ export function TopRight() {
 }
 
 // ── Bottom-right: contextual actions ─────────────────────────────────────
-function ActionButton({ label, hotkey, onClick, tone, cooldown, big }: { label: string; hotkey?: string; onClick: () => void; tone: 'task' | 'danger' | 'report' | 'neutral'; cooldown?: number; big?: boolean }) {
+function ActionButton({
+  label,
+  hotkey,
+  onClick,
+  tone,
+  cooldown,
+  big,
+  tut,
+}: {
+  label: string;
+  hotkey?: string;
+  onClick: () => void;
+  tone: 'task' | 'danger' | 'report' | 'neutral';
+  cooldown?: number;
+  big?: boolean;
+  /** Anchor for the tutorial coach's highlight. */
+  tut?: string;
+}) {
   const tones = {
     task: 'border-lamp/70 bg-lamp/90 text-ink',
     danger: 'border-laterite bg-laterite text-paper',
@@ -120,6 +137,7 @@ function ActionButton({ label, hotkey, onClick, tone, cooldown, big }: { label: 
     <button
       onClick={onClick}
       disabled={cooling}
+      data-tut={tut}
       className={`relative flex flex-col items-center justify-center rounded-2xl border-2 font-display uppercase shadow-lg transition-transform active:scale-95 disabled:opacity-55 ${tones[tone]} ${
         big ? 'h-20 w-20 text-base sm:h-24 sm:w-24' : 'h-16 w-16 text-sm sm:h-20 sm:w-20'
       }`}
@@ -210,9 +228,9 @@ export function ActionButtons() {
   return (
     <div className="pointer-events-auto flex flex-wrap-reverse items-end justify-end gap-2 sm:gap-3">
       {acts.emergency && <ActionButton label={t('action.emergency')} hotkey="E" tone="neutral" cooldown={emCd > 0 ? emCd : 0} onClick={() => void doEmergency()} />}
-      {acts.repairStationId && <ActionButton label={t('action.repair')} hotkey="E" tone="task" onClick={() => void doRepair()} />}
-      {acts.taskId && <ActionButton label={t('action.task')} hotkey="E" tone="task" onClick={() => void doTask()} />}
-      {acts.bodyId && <ActionButton label={t('action.report')} hotkey="R" tone="report" big onClick={() => void doReport()} />}
+      {acts.repairStationId && <ActionButton label={t('action.repair')} hotkey="E" tone="task" tut="action-repair" onClick={() => void doRepair()} />}
+      {acts.taskId && <ActionButton label={t('action.task')} hotkey="E" tone="task" tut="action-task" onClick={() => void doTask()} />}
+      {acts.bodyId && <ActionButton label={t('action.report')} hotkey="R" tone="report" big tut="action-report" onClick={() => void doReport()} />}
       {isCat && <ActionButton label={t('action.sabotage')} hotkey="Q" tone="neutral" cooldown={sabCd > 0 ? sabCd : 0} onClick={doSabotage} />}
       {isCat && (acts.killTargetId || !touch) && (
         <ActionButton

@@ -33,8 +33,18 @@ let pingTimer: ReturnType<typeof setInterval> | null = null;
 
 export type NetResult<T = undefined> = Ack<T> | { ok: false; error: 'TIMEOUT' };
 
+/** Answers requests locally instead of the server (the offline tutorial). */
+export type OfflineHandler = (event: string, payload: unknown) => Ack<unknown>;
+let offline: OfflineHandler | null = null;
+
+/** While set, requests and moves never reach the server. Pass null to restore. */
+export function setOfflineHandler(handler: OfflineHandler | null): void {
+  offline = handler;
+}
+
 /** Typed request/ack helper with timeout. Event names only come from C2S. */
 export function request<T = undefined>(event: string, ...args: unknown[]): Promise<NetResult<T>> {
+  if (offline) return Promise.resolve(offline(event, args[0]) as NetResult<T>);
   return new Promise((resolve) => {
     const s = socket;
     if (!s || !s.connected) return resolve({ ok: false, error: 'TIMEOUT' });
@@ -49,6 +59,7 @@ export function emitVoiceSignal(to: string, data: VoiceSignal): void {
 }
 
 export function sendMove(x: number, y: number, moving: boolean, left: boolean, seq: number): void {
+  if (offline) return;
   socket?.volatile.emit(C2S.PLAYER_MOVE, { x, y, moving, left, seq });
 }
 

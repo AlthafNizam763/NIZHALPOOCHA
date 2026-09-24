@@ -34,3 +34,25 @@ export const IconDoor = (p: { className?: string }) => (
     <path d="M14 4H6v16h8M10 12h11M18 9l3 3-3 3" />
   </svg>
 );
+export const IconBook = (p: { className?: string }) => (
+  <svg {...base} className={p.className} aria-hidden>
+    <path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5V5.5zM12 6v13.5" />
+  </svg>
+);
+export const IconBolt = (p: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={p.className} aria-hidden>
+    <path d="M13.5 2 4 13.5h6.5L9 22l11-12.5h-6.8L13.5 2z" fill="#f6d34a" stroke="#1b0f06" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);
+export const IconKey = (p: { className?: string }) => (
+  <svg viewBox="0 0 48 48" className={p.className} aria-hidden>
+    <circle cx="16" cy="24" r="9" fill="none" stroke="#e9b04f" strokeWidth="4" />
+    <path d="M25 24h18M37 24v7M43 24v5" stroke="#e9b04f" strokeWidth="4" strokeLinecap="round" />
+  </svg>
+);
+export const IconMoon = (p: { className?: string }) => (
+  <svg {...base} className={p.className} aria-hidden>
+    <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
+    <path d="M15 4.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" />
+  </svg>
+);

@@ -25,6 +25,14 @@ export interface UserStats {
   investigations: number;
 }
 
+/** First-run flow progress, stored on the user profile. */
+export interface Onboarding {
+  hasSeenIntro: boolean;
+  hasCompletedTutorial: boolean;
+}
+
+export const NEW_PLAYER_ONBOARDING: Onboarding = { hasSeenIntro: false, hasCompletedTutorial: false };
+
 export interface Profile {
   uid: string;
   username: string;
@@ -33,6 +41,7 @@ export interface Profile {
   coins: number;
   stats: UserStats;
   isGuest: boolean;
+  onboarding: Onboarding;
 }
 
 interface AuthState {

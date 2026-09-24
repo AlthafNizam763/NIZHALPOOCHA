@@ -125,7 +125,7 @@ the grace is 30 s; a disconnected host hands over immediately.
 
 | Path | Written by | Contents |
 | --- | --- | --- |
-| `users/{uid}` | client (profile fields only) + server (stats) | `username`, `appearance`, `isGuest`, `xp`, `coins`, `stats{gamesPlayed,wins,losses,tasksCompleted,catsIdentified,catGames,catWins,kills,sabotages,reports,investigations}` |
+| `users/{uid}` | client (profile fields only) + server (stats) | `username`, `appearance`, `isGuest`, `onboarding{hasSeenIntro,hasCompletedTutorial}` (mirrored in localStorage), `xp`, `coins`, `stats{gamesPlayed,wins,losses,tasksCompleted,catsIdentified,catGames,catWins,kills,sabotages,reports,investigations}` |
 | `leaderboard/{uid}` | server | `name`, `xp`, `games`, `wins`, `tasks`, `investigations` (no roles) |
 | `matches/{matchId}` | server | map, mode, winner, reason, duration, `playerIds`, per-player role/status/stats |
 | `matchPlayers/{matchId}_{uid}` | server | per-player result for history queries |

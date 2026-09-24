@@ -2,21 +2,28 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/state/authStore';
+import { onboardingRoute } from '@/services/onboarding';
 import { useT } from '@/hooks/useT';
 import { MonsoonBackdrop, Logo } from '@/components/ui/Backdrop';
 import { Spinner } from '@/components/ui/Controls';
 
-/** Splash: restores the session, then routes to login or home. */
+/**
+ * Splash: restores the session, then routes to login, the first-run flow
+ * (intro → tutorial) or home.
+ */
 export default function SplashPage() {
   const status = useAuth((s) => s.status);
+  const profile = useAuth((s) => s.profile);
   const router = useRouter();
   const t = useT();
 
   useEffect(() => {
     if (status === 'loading') return;
-    const id = setTimeout(() => router.replace(status === 'signedIn' ? '/home' : '/login'), 900);
+    if (status === 'signedIn' && !profile) return;
+    const target = status === 'signedIn' ? (onboardingRoute(profile!) ?? '/home') : '/login';
+    const id = setTimeout(() => router.replace(target), 900);
     return () => clearTimeout(id);
-  }, [status, router]);
+  }, [status, profile, router]);
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center gap-8 p-6">

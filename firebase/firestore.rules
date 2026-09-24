@@ -12,7 +12,15 @@ service cloud.firestore {
     // Profile fields a client may write. xp, coins and stats are server-only.
     function onlyProfileFields() {
       return request.resource.data.diff(resource == null ? {} : resource.data).affectedKeys()
-        .hasOnly(['username', 'appearance', 'isGuest', 'createdAt', 'updatedAt', 'settings']);
+        .hasOnly(['username', 'appearance', 'isGuest', 'createdAt', 'updatedAt', 'settings', 'onboarding']);
+    }
+    // First-run progress: { hasSeenIntro, hasCompletedTutorial } booleans only.
+    function validOnboarding() {
+      return !('onboarding' in request.resource.data) ||
+        (request.resource.data.onboarding is map &&
+         request.resource.data.onboarding.keys().hasOnly(['hasSeenIntro', 'hasCompletedTutorial']) &&
+         request.resource.data.onboarding.get('hasSeenIntro', false) is bool &&
+         request.resource.data.onboarding.get('hasCompletedTutorial', false) is bool);
     }
     function validUsername() {
       return !('username' in request.resource.data) ||
@@ -23,8 +31,8 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if signedIn();
-      allow create: if isSelf(uid) && onlyProfileFields() && validUsername();
-      allow update: if isSelf(uid) && onlyProfileFields() && validUsername();
+      allow create: if isSelf(uid) && onlyProfileFields() && validUsername() && validOnboarding();
+      allow update: if isSelf(uid) && onlyProfileFields() && validUsername() && validOnboarding();
       allow delete: if false;
     }
 

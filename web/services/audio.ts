@@ -21,7 +21,17 @@ export type Sfx =
   | 'victory'
   | 'defeat'
   | 'thunder'
-  | 'reveal';
+  | 'reveal'
+  // Story intro / tutorial cues
+  | 'thunderClose'
+  | 'powerDown'
+  | 'flicker'
+  | 'static'
+  | 'pumpStall'
+  | 'vanish'
+  | 'stinger'
+  | 'heartbeat'
+  | 'whoosh';
 
 class AudioEngine {
   private ctx: AudioContext | null = null;
@@ -31,6 +41,7 @@ class AudioEngine {
   private noise: AudioBuffer | null = null;
   private ambienceNodes: AudioNode[] = [];
   private ambienceTimers: number[] = [];
+  private droneNodes: { osc: OscillatorNode[]; gain: GainNode } | null = null;
   private unsub: (() => void) | null = null;
 
   /** Must be called from a user gesture on iOS/Safari. */
@@ -158,6 +169,47 @@ class AudioEngine {
         this.tone(220, 1.2, 'sawtooth', 0.05, 0, undefined, 110);
         this.noiseBurst(1.0, 2000, 0.08, 0.1, 'bandpass');
         break;
+      case 'thunderClose':
+        this.noiseBurst(0.18, 5000, 0.5, 0, 'highpass', this.ambience);
+        this.noiseBurst(3.2, 220, 0.9, 0.04, 'lowpass', this.ambience);
+        this.noiseBurst(1.6, 80, 1, 0.2, 'lowpass', this.ambience);
+        break;
+      case 'powerDown':
+        this.noiseBurst(0.05, 3000, 0.4, 0, 'highpass');
+        this.tone(140, 1.1, 'sawtooth', 0.06, 0.02, undefined, 28);
+        break;
+      case 'flicker':
+        for (let i = 0; i < 5; i++) {
+          const at = i * 0.09 + Math.random() * 0.05;
+          this.tone(100, 0.04, 'square', 0.05, at);
+          this.noiseBurst(0.04, 4000, 0.06, at, 'highpass');
+        }
+        break;
+      case 'static':
+        this.noiseBurst(1.3, 3200, 0.3, 0, 'bandpass');
+        this.tone(60, 1.2, 'square', 0.02);
+        break;
+      case 'pumpStall':
+        // A motor chugging slower and slower, then a sigh of air.
+        for (let i = 0, at = 0; i < 7; i++, at += 0.18 + i * 0.07) this.tone(72 - i * 4, 0.12, 'sine', 0.35 - i * 0.03, at);
+        this.noiseBurst(0.9, 700, 0.12, 2.1, 'bandpass');
+        break;
+      case 'vanish':
+        this.noiseBurst(0.5, 1800, 0.12, 0, 'bandpass');
+        this.tone(900, 0.45, 'sine', 0.05, 0, undefined, 260);
+        break;
+      case 'stinger':
+        [233, 247, 370, 494].forEach((f, i) => this.tone(f, 1.8, 'sawtooth', 0.025, i * 0.02));
+        this.noiseBurst(0.6, 900, 0.18, 0, 'bandpass');
+        this.tone(55, 2, 'sine', 0.35, 0, undefined, 40);
+        break;
+      case 'heartbeat':
+        this.tone(58, 0.16, 'sine', 0.5);
+        this.tone(52, 0.18, 'sine', 0.4, 0.24);
+        break;
+      case 'whoosh':
+        this.noiseBurst(0.7, 600, 0.2, 0, 'bandpass');
+        break;
     }
   }
 
@@ -201,6 +253,34 @@ class AudioEngine {
     );
   }
 
+  /** Low, uneasy pad under the story intro. */
+  startDrone(): void {
+    if (!this.ctx || this.droneNodes) return;
+    const ctx = this.ctx;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.09, ctx.currentTime + 4);
+    gain.connect(this.ambience);
+    const osc = [55, 55.6, 82.4].map((f) => {
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = f;
+      o.connect(gain);
+      o.start();
+      return o;
+    });
+    this.droneNodes = { osc, gain };
+  }
+
+  stopDrone(): void {
+    if (!this.ctx || !this.droneNodes) return;
+    const { osc, gain } = this.droneNodes;
+    const t = this.ctx.currentTime;
+    gain.gain.setTargetAtTime(0.0001, t, 0.4);
+    osc.forEach((o) => o.stop(t + 2));
+    this.droneNodes = null;
+  }
+
   stopAmbience(): void {
     for (const n of this.ambienceNodes) {
       if (n instanceof AudioBufferSourceNode) n.stop();
@@ -212,6 +292,7 @@ class AudioEngine {
   }
 
   dispose(): void {
+    this.stopDrone();
     this.stopAmbience();
     this.unsub?.();
   }

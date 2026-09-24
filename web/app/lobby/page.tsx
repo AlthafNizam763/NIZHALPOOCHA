@@ -71,15 +71,38 @@ export default function LobbyPage() {
     }
   }
 
+  async function copyCode() {
+    const code = room!.code;
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(code);
+      ok = true;
+    } catch {
+      // Clipboard API is unavailable on insecure origins (e.g. LAN http) — fall back to execCommand.
+      const el = document.createElement('textarea');
+      el.value = code;
+      el.setAttribute('readonly', '');
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      el.remove();
+    }
+    if (!ok) return toast('err.SERVER_ERROR', undefined, 'danger');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
   async function share() {
     const text = t('lobby.shareText', { code: room!.code });
+    if (!navigator.share) return copyCode();
     try {
-      if (navigator.share) await navigator.share({ text });
-      else {
-        await navigator.clipboard.writeText(room!.code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      }
+      await navigator.share({ text });
     } catch {
       /* user cancelled */
     }
@@ -93,11 +116,15 @@ export default function LobbyPage() {
       title={t('lobby.title')}
       onBack={() => void rooms.leave().then(() => router.replace('/home'))}
       actions={
-        <button onClick={() => void share()} className="flex shrink-0 items-center gap-2 rounded-xl border border-line bg-panel px-3 py-1.5" aria-label={`${t('lobby.code')} ${room.code} — ${t('common.share')}`}>
-          <span className="hidden text-xs text-rain sm:inline">{t('lobby.code')}</span>
-          <span className="font-display text-xl tracking-[0.15em] text-lamp sm:text-2xl sm:tracking-[0.2em]">{room.code}</span>
-          <span className="text-xs text-rain">{copied ? t('common.copied') : t('common.share')}</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-2 rounded-xl border border-line bg-panel px-3 py-1.5">
+          <button onClick={() => void copyCode()} className="flex items-center gap-2" aria-label={`${t('lobby.code')} ${room.code}`} title={t('common.copy')}>
+            <span className="hidden text-xs text-rain sm:inline">{t('lobby.code')}</span>
+            <span className="select-all font-display text-xl tracking-[0.15em] text-lamp sm:text-2xl sm:tracking-[0.2em]">{room.code}</span>
+          </button>
+          <button onClick={() => void share()} className="text-xs text-rain hover:text-mist">
+            {copied ? t('common.copied') : t('common.share')}
+          </button>
+        </div>
       }
     >
       {matchRunningWithoutMe && <p className="mb-3 rounded-xl border border-lamp/40 bg-panel p-3 text-sm text-lamp">{t('err.removedFromMatch')}</p>}
