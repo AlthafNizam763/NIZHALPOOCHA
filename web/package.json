@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "cap:sync": "next build && cap sync",
     "cap:android": "next build && cap sync android && cap open android",
-    "cap:ios": "next build && cap sync ios && cap open ios"
+    "cap:ios": "next build && cap sync ios && cap open ios",
+    "voice:generate": "tsx scripts/generate-narration.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

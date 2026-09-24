@@ -1,7 +1,7 @@
 'use client';
 import { useSettings } from '@/state/settingsStore';
 import { useT } from '@/hooks/useT';
-import { narrator, useHasVoice } from '@/services/narrator';
+import { narrator, useNarration, useNarrationSource } from '@/services/narrator';
 import type { Lang } from '@/utils/i18n';
 
 export const NARRATION_LANGS: { value: Lang; label: string }[] = [
@@ -9,14 +9,51 @@ export const NARRATION_LANGS: { value: Lang; label: string }[] = [
   { value: 'en', label: 'English' },
 ];
 
-/** Shown when the chosen narration language has no voice on this device. */
+const langLabel = (lang: Lang) => NARRATION_LANGS.find((l) => l.value === lang)!.label;
+
+/** Switches the narration language and re-speaks the current line in it at once. */
+export function setNarrationLanguage(lang: Lang): void {
+  useSettings.getState().set({ narrationLanguage: lang });
+  narrator.replay();
+}
+
+/** Shown when this device has neither recorded clips nor a voice for the narration language. */
 export function NoVoiceHint({ className = '' }: { className?: string }) {
   const t = useT();
   const on = useSettings((s) => s.narration);
   const lang = useSettings((s) => s.narrationLanguage);
-  const hasVoice = useHasVoice(lang);
-  if (!on || hasVoice || !narrator.supported()) return null;
-  return <p className={`max-w-xs text-xs text-rain ${className}`}>{t('narration.noVoice', { lang: NARRATION_LANGS.find((l) => l.value === lang)!.label })}</p>;
+  const source = useNarrationSource(lang);
+  if (!on || source !== 'none') return null;
+  return <p className={`max-w-xs text-xs text-rain ${className}`}>{t('narration.noVoice', { lang: langLabel(lang) })}</p>;
+}
+
+/** Live narration problems, so it never fails silently: blocked by the browser, or unable to play. */
+export function NarrationStatus({ className = '' }: { className?: string }) {
+  const t = useT();
+  const status = useNarration((s) => s.status);
+  const lang = useSettings((s) => s.narrationLanguage);
+  if (status === 'blocked') {
+    return (
+      <button
+        type="button"
+        onClick={() => narrator.replay()}
+        className={`animate-rise flex h-10 items-center gap-2 rounded-full border border-lamp bg-lamp/20 px-4 text-sm font-semibold text-lamp backdrop-blur-sm ${className}`}
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+          <path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z" />
+        </svg>
+        {t('narration.blocked')}
+      </button>
+    );
+  }
+  if (status === 'error' || status === 'unavailable') {
+    return (
+      <p role="status" className={`max-w-xs rounded-lg bg-black/60 px-3 py-1.5 text-xs text-rain backdrop-blur-sm ${className}`}>
+        {t(status === 'error' ? 'narration.error' : 'narration.noVoice', { lang: langLabel(lang) })}
+      </p>
+    );
+  }
+  return null;
 }
 
 /** Narration on/off plus its language (Malayalam / English), saved in settings. */
@@ -25,7 +62,6 @@ export function NarrationControls({ hint = true, className = '' }: { hint?: bool
   const on = useSettings((s) => s.narration);
   const lang = useSettings((s) => s.narrationLanguage);
   const set = useSettings((s) => s.set);
-  if (!narrator.supported()) return null;
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <div className="flex flex-wrap items-center gap-2">
@@ -34,7 +70,7 @@ export function NarrationControls({ hint = true, className = '' }: { hint?: bool
           aria-pressed={on}
           onClick={() => {
             set({ narration: !on });
-            if (on) narrator.stop();
+            if (!on) narrator.replay();
           }}
           className={`flex h-10 items-center gap-2 rounded-full border px-3 text-sm backdrop-blur-sm ${on ? 'border-lamp/70 bg-lamp/15 text-lamp' : 'border-white/20 bg-black/40 text-mist'}`}
         >
@@ -51,10 +87,7 @@ export function NarrationControls({ hint = true, className = '' }: { hint?: bool
               type="button"
               role="radio"
               aria-checked={lang === l.value}
-              onClick={() => {
-                set({ narrationLanguage: l.value });
-                narrator.stop();
-              }}
+              onClick={() => setNarrationLanguage(l.value)}
               className={`rounded-full px-3 text-sm ${lang === l.value ? 'bg-lamp font-semibold text-ink' : 'text-mist hover:text-paper'}`}
             >
               {l.label}

@@ -1,5 +1,5 @@
 import type { I18nKey } from './en';
-import type { Lang } from './index';
+import { translate, type Lang } from './index';
 
 /**
  * Spoken narration, written to be heard rather than read: the storyteller's
@@ -63,3 +63,43 @@ export const NARRATION: Record<Lang, Partial<Record<I18nKey, string>>> = {
     'recap.4': 'Do your tasks. Investigate. Report what you find… then vote it out.',
   },
 };
+
+/** Tutorial coach lines that are spoken (instructions and the player's thoughts). */
+const TUTORIAL_LINES: I18nKey[] = [
+  'tut.welcome',
+  'tut.move.touch',
+  'tut.move.keys',
+  'tut.camera.touch',
+  'tut.camera.keys',
+  'tut.camera.close',
+  'tut.goElectrical',
+  'tut.somethingWrong',
+  'tut.usePanel.touch',
+  'tut.usePanel.keys',
+  'tut.powerBack',
+  'tut.task.go.touch',
+  'tut.task.go.keys',
+  'tut.task.done',
+  'tut.inv.intro',
+  'tut.inv.follow.touch',
+  'tut.inv.follow.keys',
+  'tut.inv.c1',
+  'tut.inv.c2',
+  'tut.inv.c3',
+  'tut.report.see',
+  'tut.report.do.touch',
+  'tut.report.do.keys',
+  'tut.meeting.intro',
+  'tut.meeting.chat',
+  'tut.meeting.think',
+  'tut.vote.do',
+  'tut.vote.wait',
+];
+
+/** Every line the narrator can speak — the set of voice clips to record per language. */
+export const SPOKEN_KEYS: I18nKey[] = [...(Object.keys(NARRATION.ml) as I18nKey[]), ...TUTORIAL_LINES];
+
+/** Text to voice for a line: the storyteller script, else the regular dictionary. */
+export function spokenText(lang: Lang, key: I18nKey): string {
+  return NARRATION[lang][key] ?? translate(lang, key);
+}

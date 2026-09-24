@@ -6,7 +6,7 @@ import { audio } from '@/services/audio';
 import { narrator } from '@/services/narrator';
 import type { I18nKey } from '@/utils/i18n';
 import { camAt, clamp01, Stage } from './stage';
-import { NarrationControls } from './NarrationControls';
+import { NarrationControls, NarrationStatus } from './NarrationControls';
 import { FILM_LENGTH, SHOTS } from './shots';
 
 /**
@@ -28,6 +28,7 @@ export function Cinematic({ onDone, onSkip }: { onDone: () => void; onSkip: () =
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
+    void narrator.preload(SHOTS.flatMap((s) => s.subs.map((x) => x.key)));
     const settings = useSettings.getState();
     const low = settings.quality === 'low';
     const stage = new Stage(ctx, { lowQuality: low, reduceFlashes: settings.reduceFlashes });
@@ -87,7 +88,7 @@ export function Cinematic({ onDone, onSkip }: { onDone: () => void; onSkip: () =
       if (current !== sub) {
         sub = current;
         setSubtitle(current);
-        if (current) narrator.say(current);
+        if (current) void narrator.say(current);
       }
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -134,6 +135,7 @@ export function Cinematic({ onDone, onSkip }: { onDone: () => void; onSkip: () =
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 px-4 pt-safe pl-safe pr-safe">
         <div className="pointer-events-auto mt-2">
           <NarrationControls hint={false} />
+          <NarrationStatus className="mt-2" />
         </div>
         <button
           type="button"

@@ -8,7 +8,8 @@ import { narrator } from '@/services/narrator';
 import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';
 import { CatForm } from '@/components/ui/CatForm';
-import { NarrationControls } from '@/components/intro/NarrationControls';
+import { NarrationControls, NarrationStatus } from '@/components/intro/NarrationControls';
+import { SPOKEN_KEYS } from '@/utils/i18n/narration';
 import { LESSONS, useTutorial, type CoachLine, type LessonId } from './tutorialStore';
 import type { TutorialDirector } from './director';
 
@@ -70,7 +71,7 @@ function CoachCard({ onSkip }: { onSkip: () => void }) {
   const spoken = thought ?? objective;
 
   useEffect(() => {
-    if (spoken) narrator.say(spoken);
+    if (spoken) void narrator.say(spoken);
   }, [spoken]);
 
   const hiddenPhase = phase === 'ROLE_REVEAL' || phase === 'REPORT' || phase === 'RESULT' || phase === 'FINISHED';
@@ -224,10 +225,18 @@ export function TutorialOverlay({
   onSkip: () => void;
   exitLabel: I18nKey;
 }) {
-  useEffect(() => () => narrator.stop(), []);
+  useEffect(() => {
+    void narrator.preload(SPOKEN_KEYS.filter((k) => k.startsWith('tut.')));
+    return () => narrator.stop();
+  }, []);
   return (
     <>
       <CoachCard onSkip={onSkip} />
+      <div className="pointer-events-none fixed inset-x-0 top-[11rem] z-[56] flex justify-center px-3 [@media(max-height:480px)]:top-[9.5rem]">
+        <div className="pointer-events-auto">
+          <NarrationStatus />
+        </div>
+      </div>
       <Highlight />
       <InspectButton director={director} />
       <TutorialMenu onExit={onSkip} exitLabel={exitLabel} />

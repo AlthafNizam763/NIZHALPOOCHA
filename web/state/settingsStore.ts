@@ -21,6 +21,7 @@ export interface SettingsState {
   narration: boolean;
   /** Language of the spoken narration, independent of the interface language. */
   narrationLanguage: Lang;
+  narrationVolume: number;
   set: (patch: Partial<Omit<SettingsState, 'set'>>) => void;
 }
 
@@ -42,13 +43,14 @@ export const useSettings = create<SettingsState>()(
       pushToTalk: false,
       narration: true,
       narrationLanguage: 'ml',
+      narrationVolume: 1,
       set: (patch) => set(patch),
     }),
     {
       name: 'nz-settings',
-      version: 4,
+      version: 5,
       migrate: (s, version) => {
-        const prev = { voiceVolume: 0.9, pushToTalk: false, ...(s as object) } as SettingsState;
+        const prev = { voiceVolume: 0.9, pushToTalk: false, narrationVolume: 1, ...(s as object) } as SettingsState;
         // v4: story narration is on by default and spoken in Malayalam.
         return version < 4 ? { ...prev, narration: true, narrationLanguage: 'ml' } : prev;
       },
