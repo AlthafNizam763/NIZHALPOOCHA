@@ -12,6 +12,7 @@ import {
   type LobbyPlayer,
   type PartialRoomSettings,
   type Phase,
+  type PublicRoomSummary,
   type ResumePayload,
   type RoomSettings,
   type RoomSnapshot,
@@ -117,6 +118,19 @@ export class Room {
           ready: m.ready,
           connected: m.connected,
         })),
+    };
+  }
+
+  publicSummary(): PublicRoomSummary {
+    const host = this.members.get(this.hostId);
+    return {
+      code: this.code,
+      hostName: host?.name ?? '—',
+      players: this.members.size,
+      maxPlayers: this.settings.maxPlayers,
+      status: this.match || this.lobbyPhase === 'STARTING' ? 'playing' : this.isFull ? 'full' : 'open',
+      voiceChat: this.settings.voiceChat,
+      mapId: this.settings.mapId,
     };
   }
 

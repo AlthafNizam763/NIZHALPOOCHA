@@ -102,7 +102,12 @@ export default function LobbyPage() {
     >
       {matchRunningWithoutMe && <p className="mb-3 rounded-xl border border-lamp/40 bg-panel p-3 text-sm text-lamp">{t('err.removedFromMatch')}</p>}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-mist">{count < GAME.MIN_PLAYERS ? t('lobby.waiting', { n: count, min: GAME.MIN_PLAYERS }) : ''}</p>
+        <p className="flex items-center gap-2 text-sm text-mist">
+          <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${room.settings.isPublic ? 'bg-moss/30 text-leaf' : 'bg-panel-2 text-mist'}`}>
+            {room.settings.isPublic ? t('create.public') : t('create.private')}
+          </span>
+          {count < GAME.MIN_PLAYERS ? t('lobby.waiting', { n: count, min: GAME.MIN_PLAYERS }) : ''}
+        </p>
         <VoiceControls />
       </div>
 

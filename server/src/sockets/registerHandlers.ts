@@ -96,6 +96,8 @@ export function registerHandlers(io: IO, rooms: RoomManager): void {
       return r.ok ? { ok: true, data: r.room.snapshot() } : r;
     });
 
+    on(C2S.ROOM_LIST, null, () => ({ ok: true, data: { rooms: rooms.listPublic(), online: activeSocket.size } }));
+
     on(C2S.ROOM_LEAVE, null, () => {
       rooms.leave(uid);
       return { ok: true };

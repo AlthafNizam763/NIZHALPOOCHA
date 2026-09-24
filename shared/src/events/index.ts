@@ -18,6 +18,7 @@ import type {
   GameEndView,
   GameStateView,
   PositionSnapshot,
+  PublicRoomList,
   ResumePayload,
   RoleInfo,
   RoomSnapshot,
@@ -33,6 +34,7 @@ export const C2S = {
   ROOM_CREATE: 'room:create',
   ROOM_JOIN: 'room:join',
   ROOM_QUICK_PLAY: 'room:quickPlay',
+  ROOM_LIST: 'room:list',
   ROOM_LEAVE: 'room:leave',
   ROOM_READY: 'room:ready',
   ROOM_SETTINGS: 'room:settings',
@@ -168,6 +170,7 @@ export interface ClientToServerEvents {
   [C2S.ROOM_CREATE]: (p: RoomCreatePayload, ack: AckFn<RoomSnapshot>) => void;
   [C2S.ROOM_JOIN]: (p: RoomJoinPayload, ack: AckFn<RoomSnapshot>) => void;
   [C2S.ROOM_QUICK_PLAY]: (p: QuickPlayPayload, ack: AckFn<RoomSnapshot>) => void;
+  [C2S.ROOM_LIST]: (ack: AckFn<PublicRoomList>) => void;
   [C2S.ROOM_LEAVE]: (ack: AckFn) => void;
   [C2S.ROOM_READY]: (p: { ready: boolean }, ack: AckFn) => void;
   [C2S.ROOM_SETTINGS]: (p: z.infer<typeof schemas.roomSettings>, ack: AckFn) => void;

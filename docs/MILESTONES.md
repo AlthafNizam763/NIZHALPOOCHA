@@ -29,6 +29,8 @@ Status of the 16 planned milestones. ✅ = implemented and exercised by tests or
   Android/iOS microphone permissions. Tested with real browsers (audio flow, mute, host switch-off,
   silence in play, meeting voice).
 
+- **Public online play**: rooms are Private (join by code) or Public; a Public rooms browser lists open games live (host, players, status, voice) with one-tap join, plus Quick Play and a players-online count. Private rooms are never listed and the listing exposes no player ids.
+
 ## Not yet built (next steps, in suggested order)
 
 1. **Investigation clues** (spec §25) — suggestive evidence spawned near incidents; `investigations` stat is wired but always 0.

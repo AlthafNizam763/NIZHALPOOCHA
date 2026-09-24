@@ -74,3 +74,23 @@ test('empty room is destroyed', () => {
   rm.leave('h');
   assert.equal(rm.get(room.code), null);
 });
+
+test('public room browser: lists only public rooms, joinable first, no player ids', () => {
+  const { rm, clock } = mgr();
+  const priv = rm.create('a', 'Asha', A) as { ok: true; room: import('../src/rooms/Room').Room };
+  const open = rm.create('b', 'Biju', A, { isPublic: true }) as { ok: true; room: import('../src/rooms/Room').Room };
+  const full = rm.create('c', 'Chinnu', A, { isPublic: true, maxPlayers: 5 }) as { ok: true; room: import('../src/rooms/Room').Room };
+  for (let i = 1; i < 5; i++) rm.join(`c${i}`, full.room.code, `C${i}`, A);
+  const playing = rm.create('d', 'Devi', A, { isPublic: true }) as { ok: true; room: import('../src/rooms/Room').Room };
+  for (let i = 1; i < 5; i++) rm.join(`d${i}`, playing.room.code, `D${i}`, A);
+  for (let i = 1; i < 5; i++) playing.room.setReady(`d${i}`, true);
+  assert.ok(playing.room.requestStart('d').ok);
+  clock.advance(GAME.START_COUNTDOWN_MS);
+
+  const list = rm.listPublic();
+  assert.deepEqual(list.map((r) => [r.hostName, r.status]), [['Biju', 'open'], ['Chinnu', 'full'], ['Devi', 'playing']]);
+  assert.ok(!list.some((r) => r.code === priv.room.code), 'private room must not be listed');
+  assert.equal(list[0]!.players, 1);
+  assert.equal(JSON.stringify(list).includes('"b"'), false, 'no player ids in the listing');
+  void open;
+});

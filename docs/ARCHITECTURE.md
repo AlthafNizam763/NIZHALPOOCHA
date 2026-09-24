@@ -77,7 +77,7 @@ Evaluated after kills, ejections (after the result screen), task completion and 
 Defined once in `shared/src/events/index.ts` (`C2S`, `S2C`, `ClientToServerEvents`, `ServerToClientEvents`).
 Requests use acknowledgements: `{ ok: true, data } | { ok: false, error: ErrorCode }`.
 
-Client → server: `room:create`, `room:join`, `room:quickPlay`, `room:leave`, `room:ready`, `room:settings`,
+Client → server: `room:create`, `room:join`, `room:quickPlay`, `room:list`, `room:leave`, `room:ready`, `room:settings`,
 `room:profile`, `room:kick`, `room:start`, `player:move`, `task:start`, `task:complete`, `player:report`,
 `cat:kill`, `cat:sabotage`, `sabotage:repairStart`, `sabotage:repair`, `meeting:start`, `meeting:chat`,
 `vote:cast`, `game:reconnect`, `net:ping`, `voice:join`, `voice:leave`, `voice:mute`, `voice:signal`.

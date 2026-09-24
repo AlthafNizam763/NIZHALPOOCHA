@@ -47,6 +47,24 @@ export interface LobbyPlayer {
   connected: boolean;
 }
 
+/** Public room as shown in the room browser (no player ids). */
+export interface PublicRoomSummary {
+  code: string;
+  hostName: string;
+  players: number;
+  maxPlayers: number;
+  /** 'open' = can join now; 'full'; 'playing' = match in progress. */
+  status: 'open' | 'full' | 'playing';
+  voiceChat: boolean;
+  mapId: RoomSettings['mapId'];
+}
+
+export interface PublicRoomList {
+  rooms: PublicRoomSummary[];
+  /** Players currently connected to this server. */
+  online: number;
+}
+
 export interface RoomSnapshot {
   code: string;
   hostId: string;

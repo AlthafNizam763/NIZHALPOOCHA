@@ -6,6 +6,7 @@ import {
   type Ack,
   type ClientToServerEvents,
   type ErrorCode,
+  type PublicRoomList,
   type ResumePayload,
   type RoomSnapshot,
   type ServerToClientEvents,
@@ -216,6 +217,7 @@ export const rooms = {
   create: (p: Parameters<ClientToServerEvents[typeof C2S.ROOM_CREATE]>[0]) => request<RoomSnapshot>(C2S.ROOM_CREATE, p),
   join: (p: Parameters<ClientToServerEvents[typeof C2S.ROOM_JOIN]>[0]) => request<RoomSnapshot>(C2S.ROOM_JOIN, p),
   quickPlay: (p: Parameters<ClientToServerEvents[typeof C2S.ROOM_QUICK_PLAY]>[0]) => request<RoomSnapshot>(C2S.ROOM_QUICK_PLAY, p),
+  list: () => request<PublicRoomList>(C2S.ROOM_LIST),
   leave: async () => {
     await voice.leave();
     const r = await request(C2S.ROOM_LEAVE);

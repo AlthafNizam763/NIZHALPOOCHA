@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { levelFromXp } from '@nizhal/shared';
 import { useAuth } from '@/state/authStore';
@@ -41,6 +41,15 @@ export default function HomePage() {
   const connected = useConnection((s) => s.status === 'connected');
   const toast = useUi((s) => s.toast);
   const [busy, setBusy] = useState(false);
+  const [online, setOnline] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!connected) return;
+    const load = () => void rooms.list().then((r) => r.ok && setOnline(r.data.online));
+    load();
+    const id = setInterval(load, 10_000);
+    return () => clearInterval(id);
+  }, [connected]);
 
   if (!ready) return <LoadingScreen messageKey="loading.session" />;
   if (!profile) return <LoadingScreen messageKey="loading.profile" />;
@@ -92,6 +101,12 @@ export default function HomePage() {
             </div>
           )}
           <Tile title={t('home.quickPlay')} hint={t('home.quickPlayHint')} accent onClick={() => void quickPlay()} disabled={!connected} loading={busy} />
+          <Tile
+            title={t('home.publicRooms')}
+            hint={online !== null ? `${t('home.publicRoomsHint')} · ${t('rooms.online', { n: online })}` : t('home.publicRoomsHint')}
+            onClick={() => router.push('/rooms')}
+            disabled={!connected}
+          />
           <div className="grid grid-cols-2 gap-3">
             <Tile title={t('home.create')} hint={t('home.createHint')} onClick={() => router.push('/create')} disabled={!connected} />
             <Tile title={t('home.join')} hint={t('home.joinHint')} onClick={() => router.push('/join')} disabled={!connected} />

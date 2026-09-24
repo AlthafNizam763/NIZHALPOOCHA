@@ -4,6 +4,7 @@ import {
   type Appearance,
   type ErrorCode,
   type PartialRoomSettings,
+  type PublicRoomSummary,
 } from '@nizhal/shared';
 import type { Clock } from '../utils/clock';
 import { roomCode } from '../utils/random';
@@ -95,6 +96,16 @@ export class RoomManager {
       if (r.ok) return r;
     }
     return this.create(playerId, name, appearance, { isPublic: true });
+  }
+
+  /** Public rooms for the room browser: joinable first, then fuller rooms first. */
+  listPublic(limit = 50): PublicRoomSummary[] {
+    const rank = { open: 0, full: 1, playing: 2 } as const;
+    return [...this.rooms.values()]
+      .filter((r) => r.settings.isPublic && r.size > 0)
+      .map((r) => r.publicSummary())
+      .sort((a, b) => rank[a.status] - rank[b.status] || b.players - a.players)
+      .slice(0, limit);
   }
 
   leave(playerId: string): void {
