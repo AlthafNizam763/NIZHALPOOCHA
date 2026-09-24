@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@nizhal/shared": "0.1.0",
+    "ai": "^7.0.113",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "firebase-admin": "13.10.0",

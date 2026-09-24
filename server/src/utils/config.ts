@@ -37,4 +37,9 @@ export const config = {
   maintenance: bool(process.env.MAINTENANCE_MODE, false),
   /** WebRTC ICE servers for voice chat (JSON array). Add a TURN server for players behind strict NATs. */
   voiceIceServers: parseIce(process.env.VOICE_ICE_SERVERS),
+  ai: {
+    /** Vercel AI Gateway key; read by the `ai` SDK directly from process.env. */
+    enabled: Boolean(process.env.AI_GATEWAY_API_KEY),
+    model: process.env.AI_MODEL || 'openai/gpt-5.5',
+  },
 } as const;
