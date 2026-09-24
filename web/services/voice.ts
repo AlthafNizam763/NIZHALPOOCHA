@@ -297,10 +297,10 @@ if (typeof window !== 'undefined') {
     return t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA';
   };
   window.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'v' && !e.repeat && !isTyping(e) && useSettings.getState().pushToTalk) voice.setTalking(true);
+    if (e.key?.toLowerCase() === 'v' && !e.repeat && !isTyping(e) && useSettings.getState().pushToTalk) voice.setTalking(true);
   });
   window.addEventListener('keyup', (e) => {
-    if (e.key.toLowerCase() === 'v') voice.setTalking(false);
+    if (e.key?.toLowerCase() === 'v') voice.setTalking(false);
   });
   window.addEventListener('blur', () => voice.setTalking(false));
 }
