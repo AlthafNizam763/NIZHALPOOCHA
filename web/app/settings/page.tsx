@@ -4,6 +4,7 @@ import { useSettings } from '@/state/settingsStore';
 import { useT } from '@/hooks/useT';
 import { Screen } from '@/components/ui/Screen';
 import { Panel, Segmented, Toggle } from '@/components/ui/Controls';
+import { NARRATION_LANGS, NoVoiceHint } from '@/components/intro/NarrationControls';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -53,6 +54,11 @@ export default function SettingsPage() {
           <Slider label={t('set.music')} value={s.musicVolume} onChange={(musicVolume) => s.set({ musicVolume })} />
           <Slider label={t('set.sfx')} value={s.sfxVolume} onChange={(sfxVolume) => s.set({ sfxVolume })} />
           <Slider label={t('set.voiceVolume')} value={s.voiceVolume} onChange={(voiceVolume) => s.set({ voiceVolume })} />
+          <Toggle label={t('set.narration')} checked={s.narration} onChange={(narration) => s.set({ narration })} />
+          <Row label={t('narration.language')}>
+            <Segmented value={s.narrationLanguage} onChange={(narrationLanguage) => s.set({ narrationLanguage })} options={NARRATION_LANGS} />
+          </Row>
+          <NoVoiceHint />
           <Toggle label={t('set.pushToTalk')} checked={s.pushToTalk} onChange={(pushToTalk) => s.set({ pushToTalk })} />
           <p className="text-xs text-rain">{t('set.voiceHint')}</p>
         </Section>

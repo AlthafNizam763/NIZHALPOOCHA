@@ -82,10 +82,10 @@ export function IntroRecap({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0);
 
   useEffect(() => {
-    narrator.say(t(SLIDES[i]!.key));
+    narrator.say(SLIDES[i]!.key);
     const id = setTimeout(() => (i < SLIDES.length - 1 ? setI(i + 1) : onDone()), SLIDE_MS + (i === SLIDES.length - 1 ? 800 : 0));
     return () => clearTimeout(id);
-  }, [i, onDone, t]);
+  }, [i, onDone]);
 
   useEffect(() => () => narrator.stop(), []);
 

@@ -8,7 +8,7 @@ import { narrator } from '@/services/narrator';
 import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';
 import { CatForm } from '@/components/ui/CatForm';
-import { NarrationToggle } from '@/components/intro/Cinematic';
+import { NarrationControls } from '@/components/intro/NarrationControls';
 import { LESSONS, useTutorial, type CoachLine, type LessonId } from './tutorialStore';
 import type { TutorialDirector } from './director';
 
@@ -70,8 +70,8 @@ function CoachCard({ onSkip }: { onSkip: () => void }) {
   const spoken = thought ?? objective;
 
   useEffect(() => {
-    if (spoken) narrator.say(t(spoken));
-  }, [spoken, t]);
+    if (spoken) narrator.say(spoken);
+  }, [spoken]);
 
   const hiddenPhase = phase === 'ROLE_REVEAL' || phase === 'REPORT' || phase === 'RESULT' || phase === 'FINISHED';
   const busy = panel === 'task' || panel === 'repair' || panel === 'fakeTask' || panel === 'menu';
@@ -165,7 +165,7 @@ function TutorialMenu({ onExit, exitLabel }: { onExit: () => void; exitLabel: I1
     <div className="pointer-events-auto fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-3" onClick={close}>
       <div className="animate-rise w-full max-w-sm space-y-3 rounded-2xl border border-line bg-panel p-5" onClick={(e) => e.stopPropagation()}>
         <h2 className="font-display text-xl">{t('tut.title')}</h2>
-        <NarrationToggle />
+        <NarrationControls />
         <p className="hidden text-xs text-rain sm:block">{t('set.keys')}</p>
         <Button full onClick={close}>
           {t('hud.resume')}

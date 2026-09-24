@@ -9,7 +9,8 @@ import { narrator } from '@/services/narrator';
 import { markOnboarding } from '@/services/profile';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Button } from '@/components/ui/Button';
-import { Cinematic, NarrationToggle } from '@/components/intro/Cinematic';
+import { Cinematic } from '@/components/intro/Cinematic';
+import { NarrationControls } from '@/components/intro/NarrationControls';
 import { IntroRecap } from '@/components/intro/IntroRecap';
 
 type Stage = 'ready' | 'film' | 'recap';
@@ -84,7 +85,7 @@ export default function IntroPage() {
         >
           {t('intro.begin')}
         </Button>
-        <NarrationToggle />
+        <NarrationControls className="items-center text-center" />
         <button type="button" onClick={() => leave(true)} className="h-10 text-sm text-rain underline-offset-4 hover:text-paper hover:underline">
           {t('intro.skip')}
         </button>

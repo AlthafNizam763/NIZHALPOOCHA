@@ -6,32 +6,8 @@ import { audio } from '@/services/audio';
 import { narrator } from '@/services/narrator';
 import type { I18nKey } from '@/utils/i18n';
 import { camAt, clamp01, Stage } from './stage';
+import { NarrationControls } from './NarrationControls';
 import { FILM_LENGTH, SHOTS } from './shots';
-
-/** Toggle for the optional text-to-speech voice-over. */
-export function NarrationToggle({ className = '' }: { className?: string }) {
-  const t = useT();
-  const on = useSettings((s) => s.narration);
-  const set = useSettings((s) => s.set);
-  if (!narrator.supported()) return null;
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={() => {
-        set({ narration: !on });
-        if (on) narrator.stop();
-      }}
-      className={`flex h-10 items-center gap-2 rounded-full border px-3 text-sm backdrop-blur-sm ${on ? 'border-lamp/70 bg-lamp/15 text-lamp' : 'border-white/20 bg-black/40 text-mist'} ${className}`}
-    >
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" />
-        {!on && <path d="M4 4l16 16" />}
-      </svg>
-      {t('intro.narration')}
-    </button>
-  );
-}
 
 /**
  * Plays the story intro: 16 painted shots with camera moves, rain, lightning,
@@ -111,7 +87,7 @@ export function Cinematic({ onDone, onSkip }: { onDone: () => void; onSkip: () =
       if (current !== sub) {
         sub = current;
         setSubtitle(current);
-        if (current) narrator.say(tRef.current(current));
+        if (current) narrator.say(current);
       }
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -157,7 +133,7 @@ export function Cinematic({ onDone, onSkip }: { onDone: () => void; onSkip: () =
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden />
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 px-4 pt-safe pl-safe pr-safe">
         <div className="pointer-events-auto mt-2">
-          <NarrationToggle />
+          <NarrationControls hint={false} />
         </div>
         <button
           type="button"

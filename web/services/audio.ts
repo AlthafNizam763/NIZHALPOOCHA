@@ -33,11 +33,20 @@ export type Sfx =
   | 'heartbeat'
   | 'whoosh';
 
+/**
+ * Rain is a soft bed under everything else: its own bus, well below SFX,
+ * voice and music, low-passed so it never hisses, and ducked further while a
+ * narration line is being spoken.
+ */
+const RAIN_LEVEL = 0.28;
+const RAIN_DUCKED = 0.4;
+
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
   private sfx!: GainNode;
   private ambience!: GainNode;
+  private rain!: GainNode;
   private noise: AudioBuffer | null = null;
   private ambienceNodes: AudioNode[] = [];
   private ambienceTimers: number[] = [];
@@ -54,6 +63,12 @@ class AudioEngine {
       this.master = this.ctx.createGain();
       this.sfx = this.ctx.createGain();
       this.ambience = this.ctx.createGain();
+      this.rain = this.ctx.createGain();
+      this.rain.gain.value = RAIN_LEVEL;
+      const soften = this.ctx.createBiquadFilter();
+      soften.type = 'lowpass';
+      soften.frequency.value = 2600;
+      this.rain.connect(soften).connect(this.ambience);
       this.sfx.connect(this.master);
       this.ambience.connect(this.master);
       this.master.connect(this.ctx.destination);
@@ -230,7 +245,7 @@ class AudioEngine {
       f.Q.value = q;
       const g = ctx.createGain();
       g.gain.value = gain;
-      src.connect(f).connect(g).connect(this.ambience);
+      src.connect(f).connect(g).connect(this.rain);
       src.start();
       this.ambienceNodes.push(src, f, g);
     }
@@ -251,6 +266,12 @@ class AudioEngine {
         }
       }, 9000),
     );
+  }
+
+  /** Lowers the rain further while narration speaks, and restores it after. */
+  duckRain(duck: boolean): void {
+    if (!this.ctx) return;
+    this.rain.gain.setTargetAtTime(RAIN_LEVEL * (duck ? RAIN_DUCKED : 1), this.ctx.currentTime, duck ? 0.15 : 0.6);
   }
 
   /** Low, uneasy pad under the story intro. */
