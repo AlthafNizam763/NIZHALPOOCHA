@@ -18,7 +18,7 @@ import { Capacitor } from '@capacitor/core';
 import { useAuth, type AuthUser } from '@/state/authStore';
 import type { I18nKey } from '@/utils/i18n';
 import { firebaseEnabled, fbAuth } from './firebase';
-import { ensureProfile, saveProfile } from './profile';
+import { ensureProfile, localProfile, saveProfile } from './profile';
 
 const DEV_KEY = 'nz-dev-identity';
 
@@ -47,8 +47,18 @@ async function applyUser(user: AuthUser | null, fromListener = false) {
   if (!user) return;
   try {
     store.setProfile(await ensureProfile(user));
+    useAuth.setState({ profileSync: 'ok' });
   } catch (err) {
-    console.error('[auth] failed to load profile', err);
+    // Keep the player moving with a local profile instead of hanging on "Loading…".
+    const denied = err instanceof FirebaseError && err.code === 'permission-denied';
+    console.warn(
+      denied
+        ? '[auth] Firestore denied access to users/{uid}. Deploy firebase/firestore.rules to this project (or use a dedicated project). Using a local profile.'
+        : '[auth] Could not load the profile from Firestore; using a local profile.',
+      err,
+    );
+    useAuth.setState({ profileSync: denied ? 'denied' : 'offline' });
+    store.setProfile(localProfile(user));
   }
 }
 

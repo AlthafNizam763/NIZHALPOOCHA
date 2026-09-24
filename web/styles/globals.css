@@ -28,9 +28,13 @@
   font-size: 18px;
 }
 
+/* Only <html> paints the page colour: if <body> had its own background it would
+   cover the fixed -z-10 backdrops (menu skyline, title-screen animation). */
+html {
+  background: var(--color-ink);
+}
 html,
 body {
-  background: var(--color-ink);
   color: var(--color-paper);
   height: 100%;
 }

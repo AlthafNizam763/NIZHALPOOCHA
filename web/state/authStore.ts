@@ -39,6 +39,11 @@ interface AuthState {
   status: 'loading' | 'signedOut' | 'signedIn';
   user: AuthUser | null;
   profile: Profile | null;
+  /**
+   * 'denied'  — Firestore rules refused the profile (e.g. rules not deployed to this project);
+   * 'offline' — Firestore unreachable. In both cases a local profile is used and nothing is saved.
+   */
+  profileSync: 'ok' | 'denied' | 'offline';
   setUser: (user: AuthUser | null) => void;
   setProfile: (profile: Profile | null) => void;
 }
@@ -47,6 +52,7 @@ export const useAuth = create<AuthState>()((set) => ({
   status: 'loading',
   user: null,
   profile: null,
+  profileSync: 'ok',
   setUser: (user) => set({ user, status: user ? 'signedIn' : 'signedOut', ...(user ? {} : { profile: null }) }),
   setProfile: (profile) => set({ profile }),
 }));

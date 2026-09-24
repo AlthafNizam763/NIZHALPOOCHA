@@ -12,7 +12,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { DEFAULT_APPEARANCE, randomAppearance, type Appearance } from '@nizhal/shared';
-import { EMPTY_USER_STATS, type AuthUser, type Profile, type UserStats } from '@/state/authStore';
+import { EMPTY_USER_STATS, useAuth, type AuthUser, type Profile, type UserStats } from '@/state/authStore';
 import { firebaseEnabled, fbDb } from './firebase';
 
 const LOCAL_KEY = 'nz-local-profile';
@@ -22,7 +22,7 @@ function sanitizeName(name: string): string {
   return clean.length >= 2 ? clean : `Guest${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-function localProfile(user: AuthUser): Profile {
+export function localProfile(user: AuthUser): Profile {
   try {
     const raw = localStorage.getItem(`${LOCAL_KEY}:${user.uid}`) ?? localStorage.getItem(LOCAL_KEY);
     if (raw) {
@@ -81,7 +81,7 @@ export async function ensureProfile(user: AuthUser): Promise<Profile> {
 /** Profile fields the client is allowed to write (stats/xp are server-only). */
 export async function saveProfile(user: AuthUser, patch: { username?: string; appearance?: Appearance }): Promise<void> {
   const clean = { ...patch, ...(patch.username ? { username: sanitizeName(patch.username) } : {}) };
-  if (!firebaseEnabled || user.isDev) {
+  if (!firebaseEnabled || user.isDev || useAuth.getState().profileSync !== 'ok') {
     const current = localProfile(user);
     localStorage.setItem(`${LOCAL_KEY}:${user.uid}`, JSON.stringify({ ...current, ...clean }));
     localStorage.setItem(LOCAL_KEY, JSON.stringify({ ...current, ...clean }));
