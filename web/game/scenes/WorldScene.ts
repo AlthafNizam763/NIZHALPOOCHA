@@ -185,7 +185,7 @@ export class WorldScene extends Phaser.Scene {
       const x = b.floor.x + b.floor.w / 2;
       const y = b.floor.y - 4;
       const label = this.add
-        .text(x, y, text, { fontFamily: '"Baloo Chettan 2", "Noto Sans Malayalam", sans-serif', fontSize: '15px', color: '#ece6d6' })
+        .text(x, y, text, { fontFamily: '"Baloo Chettan 2", sans-serif', fontSize: '15px', color: '#ece6d6' })
         .setOrigin(0.5, 1)
         .setResolution(2)
         .setDepth(7);
@@ -302,10 +302,10 @@ export class WorldScene extends Phaser.Scene {
     const fellowCat = useGame.getState().role?.fellowCats.some((c) => c.id === id) ?? false;
     const label = this.add
       .text(0, -44, name, {
-        fontFamily: 'Manrope, "Noto Sans Malayalam", sans-serif',
+        fontFamily: 'Manrope, "Baloo Chettan 2", sans-serif',
         fontSize: '12px',
         fontStyle: '600',
-        color: fellowCat ? '#e9b04f' : isMe ? '#ffffff' : '#e8e1cf',
+        color: fellowCat ? '#f1b43e' : isMe ? '#ffffff' : '#e8e1cf',
         stroke: '#0e1512',
         strokeThickness: 3,
       })
@@ -334,7 +334,7 @@ export class WorldScene extends Phaser.Scene {
 
   private syncLabels(): void {
     const fellow = new Set(useGame.getState().role?.fellowCats.map((c) => c.id));
-    for (const a of this.remotes.values()) a.label.setColor(fellow.has(a.id) ? '#e9b04f' : '#e8e1cf');
+    for (const a of this.remotes.values()) a.label.setColor(fellow.has(a.id) ? '#f1b43e' : '#e8e1cf');
   }
 
   private ensureMe(): Actor | null {

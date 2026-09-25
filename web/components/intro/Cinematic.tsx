@@ -130,37 +130,37 @@ export function Cinematic({ onDone, onSkip }: { onDone: () => void; onSkip: () =
   }, [onSkip]);
 
   return (
-    <div className="fixed inset-0 z-40 bg-black select-none">
+    <div className="fixed inset-0 z-40 bg-ink select-none">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden />
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 px-4 pt-safe pl-safe pr-safe">
-        <div className="pointer-events-auto mt-2">
+        <div className="pointer-events-auto mt-2 min-w-0">
           <NarrationControls hint={false} />
           <NarrationStatus className="mt-2" />
         </div>
         <button
           type="button"
           onClick={onSkip}
-          className="pointer-events-auto mt-2 flex h-10 items-center gap-2 rounded-full border border-white/25 bg-black/45 px-4 text-sm font-semibold uppercase tracking-wide text-paper backdrop-blur-sm hover:border-lamp hover:text-lamp"
+          aria-label={t('intro.skip')}
+          className="tactile pointer-events-auto mt-2 flex h-11 shrink-0 items-center gap-2 rounded-full border-2 border-line border-b-ink bg-ink/75 px-4 font-display text-sm font-bold uppercase leading-tight tracking-wide text-paper hover:border-lamp/60 hover:text-lamp max-[380px]:w-11 max-[380px]:justify-center max-[380px]:px-0"
         >
-          {t('intro.skip')}
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+          <span className="max-[380px]:sr-only">{t('intro.skip')}</span>
+          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="currentColor" aria-hidden>
             <path d="M5 5l9 7-9 7V5zm10 0h3v14h-3V5z" />
           </svg>
         </button>
       </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-[10.5vh] flex justify-center px-6" aria-live="polite">
+      <div className="pointer-events-none absolute inset-x-0 bottom-[10.5vh] flex justify-center px-4 [@media(max-height:480px)]:bottom-[8vh]" aria-live="polite">
         {subtitle && (
           <p
             key={subtitle}
-            className="animate-rise max-w-3xl text-center text-lg font-semibold leading-snug text-paper sm:text-2xl [@media(max-height:480px)]:text-base"
-            style={{ textShadow: '0 2px 4px #000, 0 0 12px rgba(0,0,0,.9)' }}
+            className="animate-rise max-w-3xl rounded-2xl border border-line/60 bg-ink/80 px-4 py-2 text-center font-display text-lg font-semibold leading-snug text-paper shadow-[0_10px_28px_-12px_rgba(0,0,0,.8)] sm:px-6 sm:py-2.5 sm:text-2xl [@media(max-height:480px)]:px-3 [@media(max-height:480px)]:py-1.5 [@media(max-height:480px)]:text-base"
           >
             {t(subtitle)}
           </p>
         )}
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/10" aria-hidden>
-        <div ref={barRef} className="h-full w-0 bg-lamp/70" />
+      <div className="absolute inset-x-0 bottom-0 h-1 bg-ink/70" aria-hidden>
+        <div ref={barRef} className="h-full w-0 rounded-r-full bg-lamp shadow-[0_0_8px_var(--color-lamp)]" />
       </div>
     </div>
   );

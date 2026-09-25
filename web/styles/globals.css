@@ -1,23 +1,35 @@
 @import 'tailwindcss';
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Nizhalpoocha design tokens — "Kerala monsoon night"
+   Forest-night surfaces · jasmine-cream text · kasavu-gold accent ·
+   laterite (danger / the Cat) · backwater teal (info) · forest green (primary).
+   ───────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-ink: #0e1512;
-  --color-night: #131c19;
-  --color-panel: #19231f;
-  --color-panel-2: #212d28;
-  --color-line: #2e3c36;
-  --color-moss: #3f7d5c;
-  --color-moss-deep: #2f6b4f;
-  --color-leaf: #7bb592;
-  --color-rain: #8a9aa3;
-  --color-mist: #b6c1bd;
-  --color-paper: #ece6d6;
-  --color-lamp: #e9b04f;
-  --color-laterite: #b5573a;
-  --color-canal: #3f6f86;
+  --color-ink: #09130f;
+  --color-night: #0e1b16;
+  --color-panel: #13241e;
+  --color-panel-2: #1a3028;
+  --color-line: #294238;
+  --color-line-strong: #3a5a4c;
+  --color-moss: #2f7d55;
+  --color-moss-deep: #1c5538;
+  --color-leaf: #82d49c;
+  --color-rain: #8ea69c;
+  --color-mist: #c0cdc6;
+  --color-paper: #f5eedb;
+  --color-lamp: #f1b43e;
+  --color-gold-deep: #a9761c;
+  --color-laterite: #cc5a3c;
+  --color-laterite-deep: #8a3522;
+  --color-canal: #3a8f97;
+  --color-canal-deep: #22636a;
 
-  --font-display: 'Baloo Chettan 2', 'Noto Sans Malayalam', system-ui, sans-serif;
-  --font-body: 'Manrope', 'Noto Sans Malayalam', system-ui, sans-serif;
+  --font-display: 'Baloo Chettan 2', system-ui, sans-serif;
+  /* Malayalam in body text falls back to Baloo Chettan 2 so both scripts share one voice. */
+  --font-body: 'Manrope', 'Baloo Chettan 2', system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
 }
 
 :root {
@@ -209,8 +221,8 @@ svg ellipse.animate-\[blink_5s_infinite\] {
 
 /* Tutorial: pulsing ring around the UI element the coach points at */
 @keyframes tut-ring {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(233, 176, 79, 0.95), 0 0 18px 4px rgba(233, 176, 79, 0.45); }
-  50% { box-shadow: 0 0 0 5px rgba(233, 176, 79, 0.6), 0 0 28px 8px rgba(233, 176, 79, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 3px rgba(241, 180, 62, 0.95), 0 0 18px 4px rgba(241, 180, 62, 0.45); }
+  50% { box-shadow: 0 0 0 5px rgba(241, 180, 62, 0.6), 0 0 28px 8px rgba(241, 180, 62, 0.25); }
 }
 .tut-ring {
   animation: tut-ring 1.2s ease-in-out infinite;
@@ -227,4 +239,138 @@ svg ellipse.animate-\[blink_5s_infinite\] {
   .tut-bounce {
     animation: none;
   }
+}
+
+/* ─────────────── Design system utilities ─────────────── */
+
+/* Kasavu: the thin gold double line of a Kerala saree border — our signature edge. */
+.kasavu {
+  position: relative;
+}
+.kasavu::before {
+  content: '';
+  position: absolute;
+  inset: 0 18px auto;
+  height: 5px;
+  border-radius: 0 0 4px 4px;
+  background:
+    linear-gradient(var(--color-lamp), var(--color-lamp)) top / 100% 2px no-repeat,
+    linear-gradient(var(--color-gold-deep), var(--color-gold-deep)) bottom / 100% 1px no-repeat;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Raised surface used by panels, cards and dialogs. Layered so border/background utilities can override it. */
+@layer components {
+  .surface {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-panel) 92%, white 8%) 0%, var(--color-panel) 40%);
+    border: 1.5px solid var(--color-line);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 14px 32px -18px rgb(0 0 0 / 0.75);
+  }
+}
+
+/* Tactile game button: a darker bottom lip that compresses when pressed. */
+.tactile {
+  border-bottom-width: 4px;
+  transition: transform 0.12s ease, filter 0.12s ease, border-bottom-width 0.12s ease;
+}
+.tactile:not(:disabled):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.tactile:not(:disabled):active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+.tactile:disabled {
+  filter: saturate(0.35) brightness(0.8);
+  cursor: not-allowed;
+}
+
+/* Keyboard focus: always a clear gold ring. */
+:where(button, a, input, select, textarea, [role='switch'], [role='radio']):focus-visible {
+  outline: 2px solid var(--color-lamp);
+  outline-offset: 2px;
+}
+
+/* Chunky outlined headline text (titles, big labels). */
+.headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-shadow:
+    1.5px 1.5px 0 #06100c, -1.5px -1.5px 0 #06100c, 1.5px -1.5px 0 #06100c, -1.5px 1.5px 0 #06100c,
+    0 1.5px 0 #06100c, 0 -1.5px 0 #06100c, 1.5px 0 0 #06100c, -1.5px 0 0 #06100c, 0 3px 0 #06100c;
+}
+
+/* Screen entrance */
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+.animate-screen-in {
+  animation: screen-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Loader: two cat eyes that blink while waiting */
+@keyframes loader-blink {
+  0%, 70%, 100% { transform: scaleY(1); }
+  78% { transform: scaleY(0.08); }
+}
+@keyframes loader-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.loader-eye {
+  animation: loader-blink 2.4s ease-in-out infinite, loader-glow 1.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Murder sequence */
+@keyframes kill-vignette {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes kill-pounce {
+  0% { opacity: 0; transform: scale(0.6) translateY(30px); }
+  30% { opacity: 1; transform: scale(1.08); }
+  45% { transform: scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.1); }
+}
+@keyframes kill-fall {
+  0%, 30% { transform: rotate(0deg); opacity: 1; filter: none; }
+  60% { transform: rotate(-88deg) translateY(10px); filter: grayscale(0.8) brightness(0.7); }
+  100% { transform: rotate(-90deg) translateY(12px); opacity: 0.85; filter: grayscale(1) brightness(0.6); }
+}
+@keyframes kill-mask-off {
+  0%, 25% { opacity: 1; }
+  45%, 100% { opacity: 0; }
+}
+@keyframes kill-cat-on {
+  0%, 25% { opacity: 0; transform: scale(0.9); }
+  45%, 85% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+.kill-vignette { animation: kill-vignette 2.2s ease-out forwards; }
+.kill-pounce { animation: kill-pounce 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.kill-fall { animation: kill-fall 1.6s ease-in forwards; transform-origin: bottom center; }
+.kill-mask-off { animation: kill-mask-off 2.2s ease-in-out forwards; }
+.kill-cat-on { animation: kill-cat-on 2.2s ease-in-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-screen-in,
+  .loader-eye,
+  .kill-pounce,
+  .kill-fall {
+    animation: none;
+  }
+}
+
+/* Malayalam: letter-spacing breaks conjuncts and vowel signs apart ("ക ട ലി").
+   Tracking stays for Latin-only elements marked .keep-tracking (room codes). */
+html:lang(ml) :is([class*='tracking-'], .headline):not(.keep-tracking) {
+  letter-spacing: 0;
 }

@@ -65,7 +65,7 @@ function drawSkyline(ctx: CanvasRenderingContext2D, w: number, h: number) {
     ctx.fillRect(x - rw * 0.7, base, rw * 1.4, h - base);
   }
   // Lit windows
-  ctx.fillStyle = 'rgba(233,176,79,0.55)';
+  ctx.fillStyle = 'rgba(241,180,62,0.55)';
   for (const fx of [0.2, 0.62, 0.95]) ctx.fillRect(fx * w - 6, base + h * 0.03, 12, 10);
   for (const fx of [0.12, 0.3, 0.52, 0.72, 0.88]) {
     const x = fx * w;
@@ -82,7 +82,8 @@ function drawSkyline(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillRect(0, base + h * 0.06, w, h);
 }
 
-export function HomeBackdrop() {
+/** `calm` = menu screens: fewer drifting villagers and leaves so content stays readable. */
+export function HomeBackdrop({ calm = false }: { calm?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -156,9 +157,9 @@ export function HomeBackdrop() {
       const area = (w * h) / (1280 * 720);
       const count = (n: number) => Math.max(4, Math.round(n * Math.min(1.4, area) * (low ? 0.5 : 1)));
       floaters.length = 0;
-      for (let i = 0; i < count(7); i++) floaters.push(spawnFloater(true));
+      for (let i = 0; i < (calm ? 2 : count(7)); i++) floaters.push(spawnFloater(true));
       leaves.length = 0;
-      for (let i = 0; i < count(14); i++) leaves.push({ x: rand(0, w), y: rand(0, h), vx: rand(30, 70), vy: rand(10, 30), size: rand(5, 10), phase: rand(0, 6) });
+      for (let i = 0; i < count(calm ? 6 : 14); i++) leaves.push({ x: rand(0, w), y: rand(0, h), vx: rand(30, 70), vy: rand(10, 30), size: rand(5, 10), phase: rand(0, 6) });
       flies.length = 0;
       for (let i = 0; i < count(26); i++) flies.push({ x: rand(0, w), y: rand(h * 0.45, h * 0.95), vx: rand(-8, 8), vy: rand(-5, 5), size: rand(1.2, 2.4), phase: rand(0, 6) });
       drops.length = 0;
@@ -169,7 +170,7 @@ export function HomeBackdrop() {
 
     const frame = (now: number, dt: number) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (sky) ctx.drawImage(sky, 0, 0, w, h);
+      if (sky && sky.width && sky.height) ctx.drawImage(sky, 0, 0, w, h);
 
       // Clouds
       for (const c of clouds) {
@@ -193,7 +194,7 @@ export function HomeBackdrop() {
         ctx.globalAlpha = 0.55 + f.scale * 0.35;
         ctx.translate(f.x, f.y);
         ctx.rotate(f.rot);
-        ctx.drawImage(f.sprite, -f.sprite.width / 2, -f.sprite.height / 2);
+        if (f.sprite.width && f.sprite.height) ctx.drawImage(f.sprite, -f.sprite.width / 2, -f.sprite.height / 2);
         ctx.restore();
       }
 
@@ -257,7 +258,7 @@ export function HomeBackdrop() {
         if (t >= 1) eyes = { x: 0, y: 0, start: -1, next: now + rand(5000, 11000) };
         else {
           const open = t < 0.15 ? t / 0.15 : t > 0.85 ? (1 - t) / 0.15 : Math.abs(t - 0.5) < 0.03 ? 0.1 : 1;
-          ctx.fillStyle = `rgba(233,176,79,${0.9 * open})`;
+          ctx.fillStyle = `rgba(241,180,62,${0.9 * open})`;
           for (const dx of [-9, 9]) {
             ctx.beginPath();
             ctx.ellipse(eyes.x + dx, eyes.y, 5, 3.4 * open, 0, 0, Math.PI * 2);
@@ -308,7 +309,7 @@ export function HomeBackdrop() {
       ro.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, []);
+  }, [calm]);
 
   return <canvas ref={ref} aria-hidden className="pointer-events-none fixed inset-0 -z-10 h-full w-full" />;
 }

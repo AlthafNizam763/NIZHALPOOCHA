@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 const SLIDE_MS = 3200;
 
 function OutageIcons() {
-  const icon = 'h-12 w-12 text-mist';
+  const icon = 'h-12 w-12 text-rain';
   const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
   return (
     <div className="flex items-center gap-6">
@@ -69,8 +69,8 @@ const SLIDES: { key: I18nKey; art: () => ReactNode }[] = [
 function RecapChip({ n, labelKey }: { n: number; labelKey: I18nKey }) {
   const t = useT();
   return (
-    <span className="flex items-center gap-2 rounded-full border border-lamp/60 bg-black/50 px-3 py-1.5 font-display text-lg text-lamp">
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-lamp text-sm text-ink">{n}</span>
+    <span className="flex min-h-10 items-center gap-2 rounded-full border-2 border-lamp/50 bg-ink/70 py-1 pl-1.5 pr-3.5 font-display text-lg font-bold leading-tight text-lamp">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-b-2 border-gold-deep bg-lamp text-sm font-extrabold text-ink">{n}</span>
       {t(labelKey)}
     </span>
   );
@@ -94,28 +94,39 @@ export function IntroRecap({ onDone }: { onDone: () => void }) {
 
   const slide = SLIDES[i]!;
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center gap-6 p-6 pt-safe pb-safe text-center">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center p-4 pt-safe pb-safe text-center">
       <MonsoonBackdrop />
-      <h1 className="font-display text-sm uppercase tracking-[0.3em] text-lamp">{t('recap.title')}</h1>
-      <div key={i} className="animate-rise flex min-h-40 flex-col items-center justify-end gap-5 [@media(max-height:480px)]:min-h-0">
-        <div className="[@media(max-height:480px)]:hidden">{slide.art()}</div>
-        <p className="max-w-xl font-display text-2xl leading-snug text-paper sm:text-3xl" aria-live="polite">
-          {t(slide.key)}
-        </p>
+      <div className="animate-screen-in surface kasavu flex w-full max-w-xl flex-col items-center gap-5 rounded-[var(--radius-card)] px-4 pb-5 pt-6 sm:px-6 [@media(max-height:480px)]:gap-3 [@media(max-height:480px)]:pb-3 [@media(max-height:480px)]:pt-4">
+        <div className="flex flex-col items-center gap-1.5">
+          <h1 className="font-display text-sm font-bold uppercase leading-tight tracking-[0.3em] text-lamp">{t('recap.title')}</h1>
+          <div aria-hidden className="flex gap-1.5">
+            <span className="h-[3px] w-10 rounded-full bg-lamp" />
+            <span className="h-[3px] w-3 rounded-full bg-gold-deep" />
+          </div>
+        </div>
+        <div key={i} className="animate-rise flex min-h-40 w-full flex-col items-center justify-end gap-5 [@media(max-height:480px)]:min-h-0">
+          <div className="relative flex min-h-24 items-end justify-center [@media(max-height:480px)]:hidden">
+            <span aria-hidden className="absolute inset-x-0 -bottom-1 mx-auto h-5 w-56 rounded-[50%] bg-[radial-gradient(ellipse,color-mix(in_srgb,var(--color-lamp)_28%,transparent),transparent_70%)]" />
+            <div className="relative">{slide.art()}</div>
+          </div>
+          <p className="max-w-xl font-display text-2xl font-bold leading-snug text-paper sm:text-3xl [@media(max-height:480px)]:text-xl" aria-live="polite">
+            {t(slide.key)}
+          </p>
+        </div>
+        <div className="flex gap-2" aria-hidden>
+          {SLIDES.map((s, k) => (
+            <span key={s.key} className="h-1.5 w-10 overflow-hidden rounded-full bg-ink">
+              <span
+                className={`block h-full rounded-full bg-lamp ${k < i ? 'w-full' : k === i ? 'recap-fill' : 'w-0'}`}
+                style={k === i ? { animationDuration: `${SLIDE_MS}ms` } : undefined}
+              />
+            </span>
+          ))}
+        </div>
+        <Button variant="gold" size="lg" full className="sm:w-auto sm:min-w-64" onClick={onDone}>
+          {t('recap.continue')}
+        </Button>
       </div>
-      <div className="flex gap-2" aria-hidden>
-        {SLIDES.map((s, k) => (
-          <span key={s.key} className="h-1.5 w-10 overflow-hidden rounded-full bg-white/15">
-            <span
-              className={`block h-full bg-lamp ${k < i ? 'w-full' : k === i ? 'recap-fill' : 'w-0'}`}
-              style={k === i ? { animationDuration: `${SLIDE_MS}ms` } : undefined}
-            />
-          </span>
-        ))}
-      </div>
-      <Button variant="lamp" size="lg" onClick={onDone}>
-        {t('recap.continue')}
-      </Button>
     </main>
   );
 }

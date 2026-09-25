@@ -55,15 +55,15 @@ export function Joystick({ side }: { side: 'left' | 'right' }) {
       onPointerCancel={end}
     >
       {base ? (
-        <div className="pointer-events-none absolute h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-paper/25 bg-black/25" style={{ left: base.x, top: base.y }}>
+        <div className="pointer-events-none absolute h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-lamp/35 bg-ink/45 shadow-[inset_0_0_18px_rgb(0_0_0/0.45)]" style={{ left: base.x, top: base.y }}>
           <div
-            className="absolute left-1/2 top-1/2 h-12 w-12 rounded-full border-2 border-paper/50 bg-paper/25"
+            className="absolute left-1/2 top-1/2 h-12 w-12 rounded-full border-2 border-b-4 border-gold-deep bg-lamp/70 shadow-[0_0_14px_var(--color-lamp)]"
             style={{ transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` }}
           />
         </div>
       ) : (
-        <div className={`pointer-events-none absolute bottom-8 h-24 w-24 rounded-full border-2 border-paper/15 ${side === 'left' ? 'left-8' : 'right-8'}`}>
-          <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-paper/15" />
+        <div className={`pointer-events-none absolute bottom-8 h-24 w-24 rounded-full border-2 border-dashed border-lamp/25 bg-ink/20 ${side === 'left' ? 'left-8' : 'right-8'}`}>
+          <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-lamp/30 bg-lamp/15" />
         </div>
       )}
     </div>

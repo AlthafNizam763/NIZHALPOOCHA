@@ -78,8 +78,8 @@ export function HomeScene() {
         <svg width="190" height="230" viewBox="0 0 190 230" className="absolute -left-24 -top-10 opacity-80">
           <defs>
             <radialGradient id="lampPool" cx="0.3" cy="0.4" r="0.7">
-              <stop offset="0" stopColor="#e9b04f" stopOpacity="0.28" />
-              <stop offset="1" stopColor="#e9b04f" stopOpacity="0" />
+              <stop offset="0" stopColor="#f1b43e" stopOpacity="0.28" />
+              <stop offset="1" stopColor="#f1b43e" stopOpacity="0" />
             </radialGradient>
           </defs>
           <rect width="190" height="230" fill="url(#lampPool)" />
@@ -90,8 +90,8 @@ export function HomeScene() {
             opacity="0.75"
           />
           <g className="animate-eyes">
-            <ellipse cx="89" cy="74" rx="5" ry="3.2" fill="#e9b04f" />
-            <ellipse cx="111" cy="74" rx="5" ry="3.2" fill="#e9b04f" />
+            <ellipse cx="89" cy="74" rx="5" ry="3.2" fill="#f1b43e" />
+            <ellipse cx="111" cy="74" rx="5" ry="3.2" fill="#f1b43e" />
           </g>
         </svg>
         <div className="relative brightness-[0.28] saturate-50">

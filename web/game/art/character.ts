@@ -12,7 +12,12 @@ import {
  *
  * Logical frame: 48 × 72 units. Feet rest at y = 68.
  * Frames: 0–3 walk cycle (0 doubles as idle), 4 = lying (eyes closed).
+ *
+ * `mood` only changes the face and is purely cosmetic UI flavour (menus, story,
+ * reveals). It must never be derived from a player's role.
  */
+export type Mood = 'neutral' | 'happy' | 'suspicious' | 'scared' | 'sly' | 'blink';
+
 export const CHAR_W = 48;
 export const CHAR_H = 72;
 export const CHAR_FRAMES = 5;
@@ -43,7 +48,7 @@ export function appearanceKey(a: Appearance): string {
 }
 
 /** Draws one frame with its top-left at (ox, oy), in logical units (caller scales). */
-export function drawCharacter(ctx: CanvasRenderingContext2D, a: Appearance, frame: number, ox = 0, oy = 0): void {
+export function drawCharacter(ctx: CanvasRenderingContext2D, a: Appearance, frame: number, ox = 0, oy = 0, mood: Mood = 'neutral'): void {
   ctx.save();
   ctx.translate(ox, oy + 8);
   const lying = frame === 4;
@@ -58,6 +63,8 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, a: Appearance, fram
   const bottomN = CLOTH_COLORS[a.bottom] ?? CLOTH_COLORS[4];
   const bottom = hex(bottomN);
   const raincoat = a.topStyle === 'raincoat';
+  // Boys in white or gold "bottoms" wear a mundu with a kasavu border.
+  const mundu = !girl && (a.bottom === 4 || a.bottom === 7);
   const bob = lying ? 0 : Math.abs(phase) * 0.8;
 
   // Shadow
@@ -82,7 +89,7 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, a: Appearance, fram
   // Legs
   const leftLift = Math.max(0, phase) * 2;
   const rightLift = Math.max(0, -phase) * 2;
-  const legColor = girl ? skin : bottom;
+  const legColor = girl || mundu ? skin : bottom;
   ctx.fillStyle = legColor;
   rr(ctx, 18, 43, 5.5, 13 - leftLift, 2);
   rr(ctx, 24.5, 43, 5.5, 13 - rightLift, 2);
@@ -117,6 +124,23 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, a: Appearance, fram
     ctx.fill();
     ctx.fillStyle = '#d8b640';
     ctx.fillRect(13.3 + phase * 0.6, 51, 21.4, 2);
+  }
+
+  // Boy: mundu wrapped from the waist to the shins, gold border and front fold
+  if (mundu) {
+    ctx.fillStyle = bottom;
+    ctx.beginPath();
+    ctx.moveTo(15.5, 41);
+    ctx.lineTo(32.5, 41);
+    ctx.lineTo(33.5 + phase * 0.5, 53.5);
+    ctx.lineTo(14.5 + phase * 0.5, 53.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = a.bottom === 7 ? '#8a5a12' : '#d8b640';
+    ctx.fillRect(14.7 + phase * 0.5, 51.6, 18.6, 1.9);
+    ctx.fillRect(26.2 + phase * 0.3, 41.5, 1.2, 11);
+    ctx.fillStyle = shade(bottomN, -28);
+    ctx.fillRect(22.5, 42, 0.7, 9.5);
   }
 
   // Arms (swing opposite to legs)
@@ -186,28 +210,7 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, a: Appearance, fram
   ellipse(ctx, 24, 16, 10.5, 10.5);
 
   // Face
-  if (lying) {
-    ctx.strokeStyle = '#1b1511';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(18.8, 17.6);
-    ctx.lineTo(21.8, 17.6);
-    ctx.moveTo(26.2, 17.6);
-    ctx.lineTo(29.2, 17.6);
-    ctx.stroke();
-  } else {
-    ctx.fillStyle = '#1b1511';
-    ellipse(ctx, 20.3, 17.4, 1.5, 1.8);
-    ellipse(ctx, 27.7, 17.4, 1.5, 1.8);
-    ctx.fillStyle = '#fff';
-    ellipse(ctx, 20.8, 16.8, 0.5, 0.5);
-    ellipse(ctx, 28.2, 16.8, 0.5, 0.5);
-    ctx.strokeStyle = shade(skinN, -70);
-    ctx.lineWidth = 0.9;
-    ctx.beginPath();
-    ctx.arc(24, 20.6, 1.8, 0.2 * Math.PI, 0.8 * Math.PI);
-    ctx.stroke();
-  }
+  drawFace(ctx, lying ? 'blink' : mood, skinN, hairN);
   ctx.fillStyle = 'rgba(214,110,110,0.25)';
   ellipse(ctx, 18.3, 20.3, 1.8, 1.1);
   ellipse(ctx, 29.7, 20.3, 1.8, 1.1);
@@ -325,4 +328,88 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, a: Appearance, fram
   }
 
   ctx.restore();
+}
+
+/** Eyes, brows and mouth. Head centre is (24, 16), radius 10.5. */
+function drawFace(ctx: CanvasRenderingContext2D, mood: Mood, skinN: number, hairN: number) {
+  const ink = '#1b1511';
+  const lx = 20.3;
+  const rx = 27.7;
+  const ey = 17.4;
+  const line = (pts: number[], w = 0.9, color = ink) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = w;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0]!, pts[1]!);
+    for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i]!, pts[i + 1]!);
+    ctx.stroke();
+  };
+  const brow = shade(hairN, -20);
+
+  // Brows
+  if (mood === 'scared') {
+    line([lx - 2, 13.4, lx + 1.6, 12.4], 1, brow);
+    line([rx - 1.6, 12.4, rx + 2, 13.4], 1, brow);
+  } else if (mood === 'suspicious' || mood === 'sly') {
+    line([lx - 2, 13.8, lx + 1.8, 14.6], 1.1, brow);
+    line([rx - 1.8, mood === 'sly' ? 13.4 : 14.6, rx + 2, mood === 'sly' ? 12.9 : 13.8], 1.1, brow);
+  } else if (mood !== 'blink') {
+    line([lx - 1.8, 13.8, lx + 1.6, 13.5], 0.9, brow);
+    line([rx - 1.6, 13.5, rx + 1.8, 13.8], 0.9, brow);
+  }
+
+  // Eyes
+  if (mood === 'blink') {
+    line([lx - 1.5, ey + 0.2, lx + 1.5, ey + 0.2], 1);
+    line([rx - 1.5, ey + 0.2, rx + 1.5, ey + 0.2], 1);
+  } else if (mood === 'happy') {
+    line([lx - 1.6, ey + 0.6, lx, ey - 1, lx + 1.6, ey + 0.6], 1.1);
+    line([rx - 1.6, ey + 0.6, rx, ey - 1, rx + 1.6, ey + 0.6], 1.1);
+  } else {
+    const big = mood === 'scared';
+    const gaze = mood === 'suspicious' ? 0.7 : mood === 'sly' ? -0.7 : 0;
+    for (const x of [lx, rx]) {
+      ctx.fillStyle = '#fbf6ea';
+      ellipse(ctx, x, ey, big ? 2.2 : 1.9, big ? 2.5 : 2.1);
+      ctx.fillStyle = ink;
+      ellipse(ctx, x + gaze, ey + 0.2, big ? 0.9 : 1.3, big ? 1.1 : 1.6);
+      ctx.fillStyle = '#fff';
+      ellipse(ctx, x + gaze + 0.5, ey - 0.5, 0.45, 0.45);
+      if (mood === 'suspicious' || mood === 'sly') {
+        // heavy upper lid
+        ctx.fillStyle = hex(skinN);
+        ctx.fillRect(x - 2.3, ey - 2.6, 4.6, mood === 'sly' ? 2.3 : 1.9);
+        line([x - 2, ey - (mood === 'sly' ? 0.3 : 0.7), x + 2, ey - (mood === 'sly' ? 0.3 : 0.7)], 0.8);
+      }
+    }
+  }
+
+  // Mouth
+  const lip = shade(skinN, -70);
+  if (mood === 'happy') {
+    ctx.fillStyle = '#5a1f1a';
+    ctx.beginPath();
+    ctx.arc(24, 20.2, 2.3, 0.05 * Math.PI, 0.95 * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+  } else if (mood === 'scared') {
+    ctx.fillStyle = '#5a1f1a';
+    ellipse(ctx, 24, 21.4, 1.1, 1.4);
+  } else if (mood === 'suspicious') {
+    line([22.4, 21.3, 25.8, 21], 0.9, lip);
+  } else if (mood === 'sly') {
+    ctx.strokeStyle = lip;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(22.2, 21);
+    ctx.quadraticCurveTo(24.5, 21.8, 26.4, 19.9);
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = lip;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.arc(24, 20.6, 1.8, 0.2 * Math.PI, 0.8 * Math.PI);
+    ctx.stroke();
+  }
 }

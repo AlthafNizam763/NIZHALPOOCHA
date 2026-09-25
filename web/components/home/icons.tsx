@@ -46,8 +46,8 @@ export const IconBolt = (p: { className?: string }) => (
 );
 export const IconKey = (p: { className?: string }) => (
   <svg viewBox="0 0 48 48" className={p.className} aria-hidden>
-    <circle cx="16" cy="24" r="9" fill="none" stroke="#e9b04f" strokeWidth="4" />
-    <path d="M25 24h18M37 24v7M43 24v5" stroke="#e9b04f" strokeWidth="4" strokeLinecap="round" />
+    <circle cx="16" cy="24" r="9" fill="none" stroke="#f1b43e" strokeWidth="4" />
+    <path d="M25 24h18M37 24v7M43 24v5" stroke="#f1b43e" strokeWidth="4" strokeLinecap="round" />
   </svg>
 );
 export const IconMoon = (p: { className?: string }) => (

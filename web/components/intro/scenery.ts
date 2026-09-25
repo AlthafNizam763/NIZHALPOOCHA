@@ -18,7 +18,7 @@ export const C = {
   wall: '#1f2a26',
   wallLit: '#3a3a2c',
   wood: '#4a2c16',
-  lamp: '#e9b04f',
+  lamp: '#f1b43e',
   lampHot: '#ffd98a',
   road: '#141c1d',
   water: '#0e2229',
@@ -227,9 +227,9 @@ export function keralaHouse(s: Stage, x: number, baseY: number, w: number, h: nu
     c.fillStyle = '#0a0f0d';
     c.fillRect(x + w * wx, top + h * 0.28, w * 0.1, h * 0.28);
     if (lit > 0) {
-      c.fillStyle = `rgba(233,176,79,${0.75 * lit})`;
+      c.fillStyle = `rgba(241,180,62,${0.75 * lit})`;
       c.fillRect(x + w * wx + 2, top + h * 0.28 + 2, w * 0.1 - 4, h * 0.28 - 4);
-      glow(s, x + w * (wx + 0.05), top + h * 0.42, w * 0.22, 'rgba(233,176,79,0.6)', lit * 0.5);
+      glow(s, x + w * (wx + 0.05), top + h * 0.42, w * 0.22, 'rgba(241,180,62,0.6)', lit * 0.5);
     }
   }
   if (o.veranda) {
@@ -251,13 +251,13 @@ export function streetLamp(s: Stage, x: number, baseY: number, h: number, on: nu
   c.fillStyle = on > 0.1 ? C.lampHot : '#2a2a24';
   c.fillRect(x + 20, baseY - h + 4, 16, 6);
   if (on > 0) {
-    glow(s, x + 28, baseY - h + 10, 120, 'rgba(233,176,79,0.9)', on * 0.55);
+    glow(s, x + 28, baseY - h + 10, 120, 'rgba(241,180,62,0.9)', on * 0.55);
     // light cone on the ground
     c.save();
     c.globalCompositeOperation = 'lighter';
     const g = c.createLinearGradient(0, baseY - h, 0, baseY);
-    g.addColorStop(0, `rgba(233,176,79,${0.28 * on})`);
-    g.addColorStop(1, `rgba(233,176,79,${0.04 * on})`);
+    g.addColorStop(0, `rgba(241,180,62,${0.28 * on})`);
+    g.addColorStop(1, `rgba(241,180,62,${0.04 * on})`);
     c.fillStyle = g;
     c.beginPath();
     c.moveTo(x + 22, baseY - h + 10);
@@ -267,7 +267,7 @@ export function streetLamp(s: Stage, x: number, baseY: number, h: number, on: nu
     c.closePath();
     c.fill();
     c.restore();
-    glow(s, x + 28, baseY, h * 0.5, 'rgba(233,176,79,0.5)', on * 0.3);
+    glow(s, x + 28, baseY, h * 0.5, 'rgba(241,180,62,0.5)', on * 0.3);
   }
 }
 
@@ -362,8 +362,8 @@ export function road(s: Stage, y: number, h: number, reflections: readonly { x: 
   for (const r of reflections) {
     if (r.on <= 0) continue;
     const g = c.createLinearGradient(0, y, 0, y + h);
-    g.addColorStop(0, `rgba(233,176,79,${0.3 * r.on})`);
-    g.addColorStop(1, 'rgba(233,176,79,0)');
+    g.addColorStop(0, `rgba(241,180,62,${0.3 * r.on})`);
+    g.addColorStop(1, 'rgba(241,180,62,0)');
     c.fillStyle = g;
     c.fillRect(r.x - 14, y, 28, h);
   }
@@ -588,14 +588,14 @@ export function catSilhouette(s: Stage, x: number, y: number, k: number, eyes: n
   c.restore();
   if (eyes > 0) {
     c.save();
-    c.fillStyle = `rgba(233,176,79,${eyes})`;
+    c.fillStyle = `rgba(241,180,62,${eyes})`;
     for (const ex of [-10, 10]) {
       c.beginPath();
       c.ellipse(x + ex * k, y - 98 * k, 5 * k, 3.2 * k, 0, 0, Math.PI * 2);
       c.fill();
     }
     c.restore();
-    glow(s, x, y - 98 * k, 40 * k, 'rgba(233,176,79,0.9)', eyes * 0.4);
+    glow(s, x, y - 98 * k, 40 * k, 'rgba(241,180,62,0.9)', eyes * 0.4);
   }
 }
 

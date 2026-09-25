@@ -31,7 +31,7 @@ export const PALETTE: MapPalette = {
   roof: 0x8f3f2a,
   roofDark: 0x6e2f1f,
   roofRidge: 0xa85a3c,
-  lamp: 0xe9b04f,
+  lamp: 0xf1b43e,
 };
 
 /** The palette of the map being drawn (theme overrides on top of the defaults). */
@@ -367,7 +367,7 @@ export function drawDecoration(g: Phaser.GameObjects.Graphics, d: Decoration) {
       g.fillStyle(0x000000, 0.35).fillRect(d.x + 2, d.y + 3, d.w, d.h);
       g.fillStyle(0x5d6568, 1).fillRect(d.x, d.y, d.w, d.h);
       g.fillStyle(0x3f7d5c, 1).fillCircle(d.x + 7, d.y + 8, 2.5);
-      g.fillStyle(0xe9b04f, 1).fillCircle(d.x + 15, d.y + 8, 2.5);
+      g.fillStyle(0xf1b43e, 1).fillCircle(d.x + 15, d.y + 8, 2.5);
       g.fillStyle(0xb5573a, 1).fillCircle(d.x + 23, d.y + 8, 2.5);
       break;
     case 'radio':

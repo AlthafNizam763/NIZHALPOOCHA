@@ -16,6 +16,7 @@ import { TaskModal } from '@/components/game/TaskModal';
 import { CameraPanel, GameMenu, InfectionOverlay, MapOverlay, ReportSplash, RoleReveal, RotateDevice, SabotageMenu } from '@/components/game/Overlays';
 import { MeetingScreen, VoteResultView } from '@/components/game/Meeting';
 import { GameOver } from '@/components/game/GameOver';
+import { KillScene } from '@/components/game/KillScene';
 import { MonsoonBackdrop } from '@/components/ui/Backdrop';
 import { Spinner } from '@/components/ui/Controls';
 
@@ -87,6 +88,7 @@ export default function PlayPage() {
       <MapOverlay />
       <CameraPanel />
       <InfectionOverlay />
+      <KillScene selfId={uid} />
       <GameMenu />
       <RoleReveal />
       <ReportSplash />

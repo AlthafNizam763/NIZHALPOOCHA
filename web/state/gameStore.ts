@@ -59,6 +59,8 @@ interface GameState {
   followId: string | null;
   /** Victim ids the local Cat knows about (from private kill events). */
   knownKills: string[];
+  /** Private murder cutscene for the killer or the victim only (never broadcast). */
+  killScene: { victimId: string; asKiller: boolean; at: number } | null;
   /** Latest security-console feed (only while watching). */
   cameraFeed: CameraFeed | null;
   set: (patch: Partial<Omit<GameState, 'set' | 'reset'>>) => void;
@@ -77,6 +79,7 @@ const initial = {
   zoneId: 'junction',
   followId: null,
   knownKills: [],
+  killScene: null,
   cameraFeed: null,
 };
 

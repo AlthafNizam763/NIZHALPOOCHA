@@ -7,6 +7,7 @@ import { authErrorKey, registerEmail } from '@/services/auth';
 import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Controls';
+import { Notice } from '@/components/ui/Feedback';
 import { AuthShell, AuthSwitch } from '@/components/auth/AuthShell';
 
 export default function RegisterPage() {
@@ -51,8 +52,8 @@ export default function RegisterPage() {
             <Field label={t('auth.password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
             <Field label={t('auth.confirmPassword')} type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required minLength={6} autoComplete="new-password" />
           </div>
-          {error && <p className="text-sm text-laterite">{t(error)}</p>}
-          <Button type="submit" full size="lg" loading={busy}>
+          {error && <Notice tone="danger">{t(error)}</Notice>}
+          <Button type="submit" variant="gold" full size="lg" loading={busy}>
             {t('auth.register')}
           </Button>
         </form>

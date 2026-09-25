@@ -99,7 +99,7 @@ export function MapView({ width, labels }: { width: number; labels?: boolean }) 
         }
       }
       if (self?.alive) {
-        ctx.fillStyle = `rgba(233,176,79,${pulse})`;
+        ctx.fillStyle = `rgba(241,180,62,${pulse})`;
         for (const task of self.tasks) {
           if (task.done) continue;
           const st = map.taskStations.find((x) => x.id === task.stationId);
@@ -115,8 +115,8 @@ export function MapView({ width, labels }: { width: number; labels?: boolean }) 
           ctx.fill();
         }
       }
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#0e1512';
+      ctx.fillStyle = '#f5eedb';
+      ctx.strokeStyle = '#09130f';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(bridge.localPos.x * s, bridge.localPos.y * s, 4.5, 0, Math.PI * 2);
@@ -129,14 +129,14 @@ export function MapView({ width, labels }: { width: number; labels?: boolean }) 
   }, [map, s, width, height]);
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-line" style={{ width, height }}>
+    <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-ink ring-2 ring-line shadow-[0_14px_32px_-18px_rgb(0_0_0/0.75)]" style={{ width, height }}>
       <canvas ref={baseRef} style={{ width, height }} className="absolute inset-0" />
       <canvas ref={dynRef} style={{ width, height }} className="absolute inset-0" />
       {labels &&
         map.zones.map((z) => (
           <span
             key={z.id}
-            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[11px] font-semibold text-paper/85 [text-shadow:0_1px_2px_#000]"
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-display text-[11px] font-bold leading-tight text-paper/90 [text-shadow:0_1px_2px_var(--color-ink),0_0_4px_var(--color-ink)]"
             style={{ left: (z.x + z.w / 2) * s, top: (z.y + z.h / 2) * s }}
           >
             {t(z.nameKey as I18nKey)}
@@ -188,14 +188,14 @@ export function CameraFeedView({ width }: { width: number }) {
       const now = serverNow();
       for (const cam of map.cameras) {
         const p = cameraPosition(cam, now);
-        ctx.fillStyle = online ? 'rgba(159,232,255,0.10)' : 'rgba(181,87,58,0.08)';
-        ctx.strokeStyle = online ? 'rgba(159,232,255,0.45)' : 'rgba(181,87,58,0.5)';
+        ctx.fillStyle = online ? 'rgba(127,207,214,0.10)' : 'rgba(181,87,58,0.08)';
+        ctx.strokeStyle = online ? 'rgba(127,207,214,0.45)' : 'rgba(181,87,58,0.5)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(p.x * s, p.y * s, cam.radius * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = cam.kind === 'drone' ? '#55d6e6' : '#c9c2b0';
+        ctx.fillStyle = cam.kind === 'drone' ? '#7fcfd6' : '#c9c2b0';
         ctx.fillRect(p.x * s - 2, p.y * s - 2, 4, 4);
       }
       if (online && cameraFeed) {
@@ -203,7 +203,7 @@ export function CameraFeedView({ width }: { width: number }) {
         ctx.font = '600 10px Manrope, sans-serif';
         ctx.textAlign = 'center';
         for (const [id, x, y] of cameraFeed.p) {
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = '#f5eedb';
           ctx.beginPath();
           ctx.arc(x * s, y * s, 3.5, 0, Math.PI * 2);
           ctx.fill();
@@ -229,7 +229,7 @@ export function CameraFeedView({ width }: { width: number }) {
   }, [map, s, width, height]);
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-line" style={{ width, height }}>
+    <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-ink ring-2 ring-line shadow-[0_14px_32px_-18px_rgb(0_0_0/0.75)]" style={{ width, height }}>
       <canvas ref={baseRef} style={{ width, height }} className="absolute inset-0" />
       <canvas ref={dynRef} style={{ width, height }} className="absolute inset-0" />
     </div>

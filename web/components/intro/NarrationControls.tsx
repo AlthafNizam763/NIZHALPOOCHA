@@ -3,6 +3,7 @@ import { useSettings } from '@/state/settingsStore';
 import { useT } from '@/hooks/useT';
 import { narrator, useNarration, useNarrationSource } from '@/services/narrator';
 import type { Lang } from '@/utils/i18n';
+import { Segmented } from '@/components/ui/Controls';
 
 export const NARRATION_LANGS: { value: Lang; label: string }[] = [
   { value: 'ml', label: 'മലയാളം' },
@@ -24,7 +25,7 @@ export function NoVoiceHint({ className = '' }: { className?: string }) {
   const lang = useSettings((s) => s.narrationLanguage);
   const source = useNarrationSource(lang);
   if (!on || source !== 'none') return null;
-  return <p className={`max-w-xs text-xs text-rain ${className}`}>{t('narration.noVoice', { lang: langLabel(lang) })}</p>;
+  return <p className={`max-w-xs text-xs leading-snug text-rain ${className}`}>{t('narration.noVoice', { lang: langLabel(lang) })}</p>;
 }
 
 /** Live narration problems, so it never fails silently: blocked by the browser, or unable to play. */
@@ -37,9 +38,9 @@ export function NarrationStatus({ className = '' }: { className?: string }) {
       <button
         type="button"
         onClick={() => narrator.replay()}
-        className={`animate-rise flex h-10 items-center gap-2 rounded-full border border-lamp bg-lamp/20 px-4 text-sm font-semibold text-lamp backdrop-blur-sm ${className}`}
+        className={`tactile animate-rise flex min-h-10 items-center gap-2 rounded-full border-2 border-gold-deep bg-lamp px-4 py-1 text-left font-display text-sm font-bold leading-tight text-ink ${className}`}
       >
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+        <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="currentColor" aria-hidden>
           <path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z" />
         </svg>
         {t('narration.blocked')}
@@ -48,8 +49,11 @@ export function NarrationStatus({ className = '' }: { className?: string }) {
   }
   if (status === 'error' || status === 'unavailable') {
     return (
-      <p role="status" className={`max-w-xs rounded-lg bg-black/60 px-3 py-1.5 text-xs text-rain backdrop-blur-sm ${className}`}>
-        {t(status === 'error' ? 'narration.error' : 'narration.noVoice', { lang: langLabel(lang) })}
+      <p role="status" className={`surface flex max-w-xs items-start gap-2 rounded-xl px-3 py-2 text-xs leading-snug text-mist ${className}`}>
+        <span aria-hidden className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-canal text-[10px] font-black text-paper">
+          i
+        </span>
+        <span className="min-w-0">{t(status === 'error' ? 'narration.error' : 'narration.noVoice', { lang: langLabel(lang) })}</span>
       </p>
     );
   }
@@ -72,27 +76,19 @@ export function NarrationControls({ hint = true, className = '' }: { hint?: bool
             set({ narration: !on });
             if (!on) narrator.replay();
           }}
-          className={`flex h-10 items-center gap-2 rounded-full border px-3 text-sm backdrop-blur-sm ${on ? 'border-lamp/70 bg-lamp/15 text-lamp' : 'border-white/20 bg-black/40 text-mist'}`}
+          className={`tactile flex min-h-10 items-center gap-2 rounded-full border-2 px-3.5 py-1 font-display text-sm font-bold leading-tight ${
+            on ? 'border-lamp/70 border-b-gold-deep bg-panel-2 text-lamp' : 'border-line border-b-ink bg-panel-2 text-rain hover:text-paper'
+          }`}
         >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
             <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" />
             {!on && <path d="M4 4l16 16" />}
           </svg>
           {t('intro.narration')}
+          <span aria-hidden className={`h-2 w-2 rounded-full ${on ? 'bg-leaf shadow-[0_0_6px_var(--color-leaf)]' : 'bg-line-strong'}`} />
         </button>
-        <div role="radiogroup" aria-label={t('narration.language')} className={`flex h-10 rounded-full border border-white/20 bg-black/40 p-0.5 backdrop-blur-sm ${on ? '' : 'opacity-50'}`}>
-          {NARRATION_LANGS.map((l) => (
-            <button
-              key={l.value}
-              type="button"
-              role="radio"
-              aria-checked={lang === l.value}
-              onClick={() => setNarrationLanguage(l.value)}
-              className={`rounded-full px-3 text-sm ${lang === l.value ? 'bg-lamp font-semibold text-ink' : 'text-mist hover:text-paper'}`}
-            >
-              {l.label}
-            </button>
-          ))}
+        <div role="group" aria-label={t('narration.language')} className={`transition-opacity ${on ? '' : 'opacity-50'}`}>
+          <Segmented value={lang} options={NARRATION_LANGS} onChange={setNarrationLanguage} />
         </div>
       </div>
       {hint && <NoVoiceHint />}

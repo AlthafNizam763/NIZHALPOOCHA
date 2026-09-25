@@ -163,7 +163,7 @@ export const SHOTS: readonly Shot[] = [
       });
       // canal in the foreground, catching the town lights
       canal(s, 800, 0);
-      for (const x of [220, 520, 760, 1080, 1340]) glow(s, x, 830, 60, 'rgba(233,176,79,0.8)', 0.18 + 0.05 * Math.sin(s.time * 3 + x));
+      for (const x of [220, 520, 760, 1080, 1340]) glow(s, x, 830, 60, 'rgba(241,180,62,0.8)', 0.18 + 0.05 * Math.sin(s.time * 3 + x));
       palm(s, 60, 960, 420, 60, C.near, 1.3);
       palm(s, 1560, 980, 460, -80, C.near, 1.3);
       // location card, top-left below the player controls (subtitles own the bottom)
@@ -171,7 +171,7 @@ export const SHOTS: readonly Shot[] = [
       if (a > 0) {
         screen(s, (u) => {
           const top = s.h * 0.2;
-          s.ctx.fillStyle = `rgba(233,176,79,${a})`;
+          s.ctx.fillStyle = `rgba(241,180,62,${a})`;
           s.ctx.fillRect(48 * u, top, 4 * u, 70 * u);
           s.text(tr('intro.card.place'), 66 * u, top + 40 * u, 38 * u, C.paper, { alpha: a });
           s.text(tr('intro.card.time'), 66 * u, top + 68 * u, 20 * u, C.lamp, { alpha: a, font: 'body', weight: 600 });
@@ -680,11 +680,11 @@ export const SHOTS: readonly Shot[] = [
         const a = clamp01(1.4 - Math.abs(s.cam.x - x) / 70);
         if (a > 0.02) {
           const label = tr(CAST[id].whoKey);
-          c.font = '700 20px Manrope, "Noto Sans Malayalam", sans-serif';
+          c.font = '700 20px Manrope, "Baloo Chettan 2", sans-serif';
           const w = c.measureText(label).width + 28;
           c.save();
           c.globalAlpha = a;
-          roundRect(c, x - w / 2, 522, w, 38, 10, 'rgba(8,12,11,0.85)', 'rgba(233,176,79,0.8)');
+          roundRect(c, x - w / 2, 522, w, 38, 10, 'rgba(8,12,11,0.85)', 'rgba(241,180,62,0.8)');
           c.restore();
           s.text(label, x, 548, 20, C.paper, { align: 'center', alpha: a, font: 'body' });
         }
@@ -811,7 +811,7 @@ export const SHOTS: readonly Shot[] = [
         c.translate(cx, cy);
         c.scale(0.85 + appear * 0.15, 0.85 + appear * 0.15);
         c.globalAlpha = appear;
-        roundRect(c, -150, -190, 300, 380, 22, '#111a17', 'rgba(233,176,79,0.85)');
+        roundRect(c, -150, -190, 300, 380, 22, '#111a17', 'rgba(241,180,62,0.85)');
         c.lineWidth = 6;
         c.strokeStyle = C.paper;
         c.fillStyle = C.paper;
@@ -898,12 +898,12 @@ export const SHOTS: readonly Shot[] = [
       const eyes = ramp(t, 2.2, 3) * (Math.floor(s.time * 1.3) % 5 === 0 ? 0.1 : 1);
       if (eyes > 0) {
         for (const ex of [770, 830]) {
-          s.ctx.fillStyle = `rgba(233,176,79,${eyes})`;
+          s.ctx.fillStyle = `rgba(241,180,62,${eyes})`;
           s.ctx.beginPath();
           s.ctx.ellipse(ex, 300, 13, 8, 0, 0, Math.PI * 2);
           s.ctx.fill();
         }
-        glow(s, 800, 300, 120, 'rgba(233,176,79,0.8)', eyes * 0.3);
+        glow(s, 800, 300, 120, 'rgba(241,180,62,0.8)', eyes * 0.3);
       }
     },
   },

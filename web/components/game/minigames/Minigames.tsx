@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '@/hooks/useT';
 import { audio } from '@/services/audio';
+import { Notice } from '@/components/ui/Feedback';
 
 export interface MinigameProps {
   onDone: () => void;
@@ -18,15 +19,24 @@ function shuffle<T>(a: T[]): T[] {
 
 function Hint({ children, error }: { children: React.ReactNode; error?: string | null }) {
   return (
-    <div className="mb-3 min-h-10 text-center text-sm">
+    <div className="mb-3 flex min-h-10 flex-col items-center gap-1.5 text-center text-sm leading-snug">
       <div className="text-mist">{children}</div>
-      {error && <div className="text-laterite">{error}</div>}
+      {error && (
+        <Notice tone="danger" className="animate-rise py-1">
+          {error}
+        </Notice>
+      )}
     </div>
   );
 }
 
+/** Shared well that frames every mini-game board. */
+const BOARD = 'rounded-[var(--radius-card)] border-2 border-line bg-ink shadow-[inset_0_2px_10px_rgb(0_0_0/0.45)]';
+/** Tactile tile used by the tap-based puzzles. */
+const TILE = 'tactile rounded-2xl border-2 border-line border-b-ink bg-panel-2 text-paper hover:border-lamp/60';
+
 // ── 1. Wires ────────────────────────────────────────────────────────────
-const WIRE_COLORS = ['#b5573a', '#e9b04f', '#3f6f86', '#3f7d5c'];
+const WIRE_COLORS = ['var(--color-laterite)', 'var(--color-lamp)', 'var(--color-canal)', 'var(--color-leaf)'];
 
 export function WiresGame({ onDone }: MinigameProps) {
   const t = useT();
@@ -55,7 +65,7 @@ export function WiresGame({ onDone }: MinigameProps) {
   return (
     <div>
       <Hint error={error}>{t('mini.wires')}</Hint>
-      <div className="relative mx-auto h-[250px] w-full max-w-sm rounded-xl border border-line bg-night">
+      <div className={`relative mx-auto h-[250px] w-full max-w-sm ${BOARD}`}>
         <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 300 250" preserveAspectRatio="none">
           {Object.entries(links).map(([l, r]) => (
             <path key={l} d={`M 40 ${rowY(+l)} C 150 ${rowY(+l)}, 150 ${rowY(r)}, 260 ${rowY(r)}`} stroke={WIRE_COLORS[+l]} strokeWidth="8" fill="none" strokeLinecap="round" />
@@ -65,16 +75,19 @@ export function WiresGame({ onDone }: MinigameProps) {
           <button
             key={`l${i}`}
             onClick={() => links[i] === undefined && setPicked(i)}
-            className={`absolute left-2 h-11 w-14 -translate-y-1/2 rounded-lg border-2 ${picked === i ? 'border-paper' : 'border-transparent'}`}
+            className={`absolute left-2 h-11 w-14 -translate-y-1/2 rounded-xl border-2 border-b-4 border-ink/60 shadow-[inset_0_2px_0_rgb(255_255_255/0.25)] transition-transform ${
+              picked === i ? 'scale-110 outline outline-2 outline-offset-2 outline-paper' : links[i] !== undefined ? 'opacity-80' : 'hover:scale-105'
+            }`}
             style={{ top: `${(rowY(i) / 250) * 100}%`, background: WIRE_COLORS[i] }}
             aria-label={`wire ${i + 1}`}
+            aria-pressed={picked === i}
           />
         ))}
         {right.map((c, i) => (
           <button
             key={`r${i}`}
             onClick={() => connect(i)}
-            className="absolute right-2 h-11 w-14 -translate-y-1/2 rounded-lg border-2 border-transparent"
+            className={`absolute right-2 h-11 w-14 -translate-y-1/2 rounded-xl border-2 border-b-4 border-ink/60 shadow-[inset_0_2px_0_rgb(255_255_255/0.25)] transition-transform ${picked !== null ? 'hover:scale-105' : ''}`}
             style={{ top: `${(rowY(i) / 250) * 100}%`, background: WIRE_COLORS[c] }}
             aria-label={`socket ${i + 1}`}
           />
@@ -107,13 +120,15 @@ export function NumbersGame({ onDone }: MinigameProps) {
   return (
     <div>
       <Hint error={error}>{t('mini.numbers', { n: N })}</Hint>
-      <div className="mx-auto grid max-w-xs grid-cols-4 gap-2">
+      <div className={`mx-auto grid max-w-xs grid-cols-4 gap-2 p-2 ${BOARD}`}>
         {order.map((n) => (
           <button
             key={n}
             onClick={() => press(n)}
             disabled={n < next}
-            className={`h-16 rounded-xl border-2 font-display text-2xl transition-colors ${n < next ? 'border-moss bg-moss text-paper' : 'border-line bg-night text-paper hover:bg-panel-2'}`}
+            className={`h-16 font-display text-2xl font-extrabold ${
+              n < next ? 'cursor-default rounded-2xl border-2 border-moss-deep bg-moss text-paper' : TILE
+            }`}
           >
             {n}
           </button>
@@ -161,12 +176,20 @@ export function TimingGame({ onDone }: MinigameProps) {
   return (
     <div>
       <Hint error={error}>{t('mini.timing', { n: NEED - hits })}</Hint>
-      <div className="relative mx-auto mb-5 h-14 max-w-sm overflow-hidden rounded-xl border border-line bg-night">
-        <div className="absolute inset-y-0 bg-moss/70" style={{ left: `${(band - W / 2) * 100}%`, width: `${W * 100}%` }} />
-        <div ref={needle} className="absolute inset-y-1 w-1.5 -translate-x-1/2 rounded bg-lamp" />
+      <div className="mb-3 flex justify-center gap-1.5" aria-hidden>
+        {Array.from({ length: NEED }, (_, i) => (
+          <span key={i} className={`h-2.5 w-8 rounded-full border ${i < hits ? 'border-leaf bg-leaf' : 'border-line bg-ink'}`} />
+        ))}
+      </div>
+      <div className={`relative mx-auto mb-5 h-14 max-w-sm overflow-hidden ${BOARD}`}>
+        <div className="absolute inset-y-0 border-x-2 border-leaf bg-moss/70" style={{ left: `${(band - W / 2) * 100}%`, width: `${W * 100}%` }} />
+        <div ref={needle} className="absolute inset-y-1 w-1.5 -translate-x-1/2 rounded-full bg-lamp shadow-[0_0_10px_var(--color-lamp)]" />
       </div>
       <div className="flex justify-center">
-        <button onClick={stop} className="h-16 w-40 rounded-2xl border-2 border-lamp bg-lamp font-display text-xl text-ink active:scale-95">
+        <button
+          onClick={stop}
+          className="tactile min-h-16 min-w-40 rounded-2xl border-2 border-gold-deep bg-lamp px-6 py-2 font-display text-xl font-extrabold uppercase leading-tight text-ink"
+        >
           {t('mini.stop')}
         </button>
       </div>
@@ -226,14 +249,21 @@ export function MemoryGame({ onDone }: MinigameProps) {
   return (
     <div>
       <Hint error={error}>
-        {t('mini.memory')} <span className="text-lamp">{watching ? t('mini.memoryWatch') : t('mini.memoryGo')}</span>
+        {t('mini.memory')} <span className="font-display font-bold text-lamp">{watching ? t('mini.memoryWatch') : t('mini.memoryGo')}</span>
       </Hint>
-      <div className="mx-auto grid max-w-[15rem] grid-cols-3 gap-2">
+      <div className="mb-3 flex justify-center gap-1.5" aria-hidden>
+        {Array.from({ length: LEN }, (_, i) => (
+          <span key={i} className={`h-2.5 w-2.5 rounded-full ${i < input.length ? 'bg-lamp' : 'bg-line'}`} />
+        ))}
+      </div>
+      <div className={`mx-auto grid max-w-[15rem] grid-cols-3 gap-2 p-2 ${BOARD}`}>
         {Array.from({ length: 9 }, (_, i) => (
           <button
             key={i}
             onClick={() => press(i)}
-            className={`h-16 rounded-xl border-2 transition-colors ${lit === i ? 'border-lamp bg-lamp' : 'border-line bg-night'} ${watching ? 'cursor-wait' : ''}`}
+            className={`h-16 rounded-2xl border-2 transition-[background-color,box-shadow,border-color] duration-100 ${
+              lit === i ? 'border-gold-deep bg-lamp shadow-[0_0_18px_var(--color-lamp)]' : 'border-line bg-panel-2'
+            } ${watching ? 'cursor-wait' : 'hover:border-lamp/60'}`}
             aria-label={`lamp ${i + 1}`}
           />
         ))}
@@ -244,10 +274,10 @@ export function MemoryGame({ onDone }: MinigameProps) {
 
 // ── 5. Arrange shop items (drag & drop via tap-to-place) ────────────────
 const ITEMS = [
-  { id: 'tea', shape: 'rounded-sm', color: '#3f7d5c', label: 'ചായപ്പൊടി' },
-  { id: 'rice', shape: 'rounded-full', color: '#e8e1cf', label: 'അരി' },
-  { id: 'banana', shape: 'rounded-[40%_10%]', color: '#d8b640', label: 'പഴം' },
-  { id: 'soap', shape: 'rounded-md rotate-45', color: '#6b4e8a', label: 'സോപ്പ്' },
+  { id: 'tea', shape: 'rounded-sm', color: 'var(--color-moss)', label: 'ചായപ്പൊടി' },
+  { id: 'rice', shape: 'rounded-full', color: 'var(--color-paper)', label: 'അരി' },
+  { id: 'banana', shape: 'rounded-[40%_10%]', color: 'var(--color-lamp)', label: 'പഴം' },
+  { id: 'soap', shape: 'rounded-md rotate-45', color: 'var(--color-canal)', label: 'സോപ്പ്' },
 ];
 
 export function ArrangeGame({ onDone }: MinigameProps) {
@@ -274,22 +304,33 @@ export function ArrangeGame({ onDone }: MinigameProps) {
   };
   const Icon = ({ id, size = 34 }: { id: string; size?: number }) => {
     const it = ITEMS.find((x) => x.id === id)!;
-    return <span className={`inline-block ${it.shape}`} style={{ width: size, height: size, background: it.color }} />;
+    return <span className={`inline-block shadow-[inset_0_-3px_0_rgb(0_0_0/0.25)] ${it.shape}`} style={{ width: size, height: size, background: it.color }} />;
   };
   return (
     <div>
       <Hint error={error}>{t('mini.arrange')}</Hint>
-      <div className="mx-auto mb-4 grid max-w-sm grid-cols-4 gap-2">
+      <div className={`mx-auto mb-4 grid max-w-sm grid-cols-4 gap-2 p-2 ${BOARD}`}>
         {shelves.map((s) => (
-          <button key={s.id} onClick={() => place(s.id)} className="flex h-24 flex-col items-center justify-end rounded-xl border-b-8 border-[#5a3e27] bg-night pb-2">
+          <button
+            key={s.id}
+            onClick={() => place(s.id)}
+            className={`flex min-h-24 flex-col items-center justify-end rounded-xl border-2 border-b-8 border-line border-b-gold-deep bg-panel px-1 pb-2 transition-colors ${
+              picked && !placed[s.id] ? 'hover:border-lamp/60 hover:border-b-gold-deep hover:bg-panel-2' : ''
+            }`}
+          >
             {placed[s.id] ? <Icon id={s.id} /> : <span className={`inline-block h-8 w-8 border-2 border-dashed border-rain/60 ${s.shape}`} />}
-            <span className="mt-1 text-[11px] text-rain">{s.label}</span>
+            <span className="mt-1 text-[11px] leading-tight text-mist">{s.label}</span>
           </button>
         ))}
       </div>
       <div className="flex min-h-16 flex-wrap justify-center gap-3">
         {loose.map((id) => (
-          <button key={id} onClick={() => setPicked(id)} className={`flex h-16 w-16 items-center justify-center rounded-xl border-2 bg-panel-2 ${picked === id ? 'border-paper' : 'border-line'}`}>
+          <button
+            key={id}
+            onClick={() => setPicked(id)}
+            aria-pressed={picked === id}
+            className={`tactile flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-b-ink ${picked === id ? 'border-lamp bg-lamp/15' : 'border-line bg-panel-2 hover:border-lamp/60'}`}
+          >
             <Icon id={id} />
           </button>
         ))}
@@ -324,23 +365,23 @@ export function ClearGame({ onDone }: MinigameProps) {
     <div>
       <Hint>{t('mini.clear')}</Hint>
       <div
-        className="relative mx-auto h-56 max-w-sm overflow-hidden rounded-xl border border-line"
+        className="relative mx-auto h-56 max-w-sm overflow-hidden rounded-[var(--radius-card)] border-2 border-line"
         style={{
           background:
             gone.size === debris.length
-              ? 'repeating-linear-gradient(90deg,#1f4a5a 0 14px,#2b5e70 14px 16px)'
-              : 'repeating-linear-gradient(90deg,#1b1f20 0 14px,#3a3f41 14px 18px)',
+              ? 'repeating-linear-gradient(90deg,var(--color-canal-deep) 0 14px,var(--color-canal) 14px 16px)'
+              : 'repeating-linear-gradient(90deg,var(--color-ink) 0 14px,var(--color-panel-2) 14px 18px)',
         }}
       >
         {debris.map((d) => (
           <button
             key={d.id}
             onClick={() => clear(d.id)}
-            className={`absolute h-12 w-16 transition-all duration-300 ${gone.has(d.id) ? 'pointer-events-none translate-x-40 opacity-0' : ''}`}
+            className={`absolute h-12 w-16 transition-all duration-300 ${gone.has(d.id) ? 'pointer-events-none translate-x-40 opacity-0' : 'hover:brightness-110'}`}
             style={{ left: `${d.x}%`, top: `${d.y}%`, transform: `rotate(${d.rot}deg)` }}
             aria-label="debris"
           >
-            <span className={`block h-full w-full ${d.leaf ? 'rounded-[50%_0] bg-[#4f6b2f]' : 'rounded-md bg-[#c9c2b0]/80'}`} />
+            <span className={`block h-full w-full shadow-[inset_0_-4px_0_rgb(0_0_0/0.3)] ${d.leaf ? 'rounded-[50%_0] bg-moss-deep' : 'rounded-md bg-mist/80'}`} />
           </button>
         ))}
       </div>
@@ -374,21 +415,27 @@ export function HoldRepair({ onDone, ms = 1700 }: MinigameProps & { ms?: number 
     return () => cancelAnimationFrame(raf);
   }, [ms, onDone]);
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="h-4 w-full max-w-xs overflow-hidden rounded-full bg-night">
-        <div className="h-full bg-lamp" style={{ width: `${progress * 100}%` }} />
-      </div>
-      <button
-        onPointerDown={() => (holding.current = true)}
-        onPointerUp={() => (holding.current = false)}
-        onPointerLeave={() => (holding.current = false)}
-        onPointerCancel={() => (holding.current = false)}
-        onKeyDown={(e) => e.key === ' ' && (holding.current = true)}
-        onKeyUp={() => (holding.current = false)}
-        className="h-28 w-28 touch-none select-none rounded-full border-4 border-lamp bg-panel-2 font-display text-lg active:bg-lamp active:text-ink"
+    <div className="flex flex-col items-center gap-4 py-2">
+      {/* Gold progress ring around the hold button */}
+      <div
+        className="rounded-full p-1.5 shadow-[0_0_24px_-6px_var(--color-lamp)]"
+        style={{ background: `conic-gradient(var(--color-lamp) ${progress * 360}deg, var(--color-ink) 0deg)` }}
       >
-        {t('mini.hold')}
-      </button>
+        <button
+          onPointerDown={() => (holding.current = true)}
+          onPointerUp={() => (holding.current = false)}
+          onPointerLeave={() => (holding.current = false)}
+          onPointerCancel={() => (holding.current = false)}
+          onKeyDown={(e) => e.key === ' ' && (holding.current = true)}
+          onKeyUp={() => (holding.current = false)}
+          className="tactile flex h-28 w-28 touch-none select-none items-center justify-center rounded-full border-4 border-gold-deep bg-panel-2 px-2 font-display text-lg font-extrabold uppercase leading-tight text-paper active:bg-lamp active:text-ink"
+        >
+          {t('mini.hold')}
+        </button>
+      </div>
+      <div className="h-3 w-full max-w-xs overflow-hidden rounded-full border border-line bg-ink">
+        <div className="h-full rounded-full bg-lamp" style={{ width: `${progress * 100}%` }} />
+      </div>
     </div>
   );
 }

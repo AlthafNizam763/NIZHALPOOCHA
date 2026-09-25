@@ -396,6 +396,12 @@ export const en = {
   'conn.lostHint': 'We could not reach the game server.',
   'conn.replaced': 'You opened the game somewhere else.',
 
+  'rooms.refresh': 'Refresh',
+  'set.account': 'Account',
+  'kill.struck': 'Struck in the dark',
+  'kill.strike': 'The mask slips for a moment…',
+  'kill.caught': 'Something was waiting in the rain',
+  'kill.ghost': 'You are a ghost now. Keep finishing tasks for your town.',
   'err.title': 'Something went wrong',
   'err.UNAUTHORIZED': 'Your session expired. Please sign in again.',
   'err.INVALID_PAYLOAD': 'That request was not valid.',

@@ -26,14 +26,18 @@ export default function SplashPage() {
   }, [status, profile, router]);
 
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center gap-6 p-6 pt-safe pb-safe">
       <MonsoonBackdrop />
       <div className="animate-rise">
         <Logo />
       </div>
-      <p className="animate-rise max-w-sm text-center text-mist [animation-delay:200ms]">{t('app.tagline')}</p>
-      <div className="flex items-center gap-3 text-sm text-rain">
-        <Spinner className="h-4 w-4" />
+      <p className="animate-rise flex max-w-sm items-center gap-2 text-center font-display text-lg font-bold text-paper [animation-delay:200ms]">
+        <span aria-hidden className="h-[2px] w-6 shrink-0 rounded-full bg-lamp/70" />
+        {t('app.tagline')}
+        <span aria-hidden className="h-[2px] w-6 shrink-0 rounded-full bg-lamp/70" />
+      </p>
+      <div className="surface mt-4 flex items-center gap-3 rounded-full px-5 py-2.5 text-sm font-semibold text-mist" role="status" aria-busy="true">
+        <Spinner className="h-7 w-9" />
         {t('splash.loading')}
       </div>
     </main>

@@ -22,11 +22,20 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {
   const close = () => useGame.getState().set({ panel: null });
   return (
-    <div className="pointer-events-auto fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-3">
-      <div className="animate-rise max-h-[94dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-panel p-4 sm:p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-xl">{title}</h2>
-          <button onClick={close} className="h-10 w-10 rounded-lg text-2xl text-rain hover:bg-panel-2 hover:text-paper" aria-label="close">
+    <div className="pointer-events-auto fixed inset-0 z-40 flex items-center justify-center bg-ink/75 p-3">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="surface kasavu animate-screen-in max-h-[94dvh] w-full max-w-lg overflow-y-auto rounded-[var(--radius-card)] p-4 pt-5 scrollbar-thin sm:p-5 sm:pt-6"
+      >
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="headline min-w-0 text-2xl leading-tight text-paper">{title}</h2>
+          <button
+            onClick={close}
+            className="tactile flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-line border-b-ink bg-panel-2 text-xl text-mist hover:text-paper"
+            aria-label="close"
+          >
             ×
           </button>
         </div>
@@ -98,7 +107,7 @@ export function TaskModal() {
   if (panel.kind === 'objective') {
     return (
       <Shell title={t('objective.antidotePart')}>
-        <p className="mb-3 text-center text-sm text-mist">{t('objective.collecting')}</p>
+        <p className="mb-4 text-center text-sm leading-snug text-mist">{t('objective.collecting')}</p>
         <HoldRepair ms={GAME.OBJECTIVE_MIN_MS + 300} onDone={() => void finishObjective(panel.objectiveId)} />
       </Shell>
     );
@@ -152,12 +161,12 @@ function FakeTask() {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="space-y-3 text-center">
-      <p className="text-mist">{t('task.pretend')}</p>
-      <div className="mx-auto h-3 max-w-xs overflow-hidden rounded-full bg-night">
-        <div className="h-full bg-lamp" style={{ width: `${p * 100}%` }} />
+    <div className="space-y-3 py-2 text-center">
+      <p className="leading-snug text-mist">{t('task.pretend')}</p>
+      <div className="mx-auto h-4 max-w-xs overflow-hidden rounded-full border-2 border-line bg-ink">
+        <div className="h-full rounded-full bg-lamp" style={{ width: `${p * 100}%` }} />
       </div>
-      <p className="text-xs text-rain">{t('task.pretendHint')}</p>
+      <p className="text-xs leading-snug text-rain">{t('task.pretendHint')}</p>
     </div>
   );
 }

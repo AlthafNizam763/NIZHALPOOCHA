@@ -11,9 +11,25 @@ import { useIsPortrait, useIsTouch, useTicker } from '@/hooks/useDevice';
 import { actions as net, errorKey, rooms } from '@/services/net';
 import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Controls';
 import { CatForm } from '@/components/ui/CatForm';
 import { CharacterAvatar } from '@/components/ui/CharacterAvatar';
 import { CameraFeedView, MapView } from './MapView';
+
+/** Round × button used by the in-game overlays (same look as `Modal`'s close). */
+function CloseButton({ onClick, label = 'close' }: { onClick: () => void; label?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className="tactile flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-line border-b-ink bg-panel-2 text-xl text-mist hover:text-paper"
+      aria-label={label}
+    >
+      ×
+    </button>
+  );
+}
+
+const SCRIM = 'pointer-events-auto fixed inset-0 flex items-center justify-center bg-ink/75 p-3';
 
 // ── Cat sabotage menu ─────────────────────────────────────────────────────
 export function SabotageMenu() {
@@ -35,9 +51,24 @@ export function SabotageMenu() {
   };
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-40 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={close}>
-      <div className="animate-rise w-full max-w-lg rounded-2xl border border-laterite/60 bg-panel p-4" onClick={(e) => e.stopPropagation()}>
-        <h2 className="font-display mb-3 text-xl">{pickDoor ? t('sabotage.pickBuilding') : t('sabotage.title')}</h2>
+    <div className="pointer-events-auto fixed inset-0 z-40 flex items-end justify-center bg-ink/75 p-3 sm:items-center" onClick={close}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="surface kasavu animate-screen-in max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-[var(--radius-card)] p-4 pt-5 scrollbar-thin"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="headline flex min-w-0 items-center gap-2 text-2xl leading-tight text-paper">
+            <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-canal-deep bg-canal text-paper">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
+              </svg>
+            </span>
+            {pickDoor ? t('sabotage.pickBuilding') : t('sabotage.title')}
+          </h2>
+          <CloseButton onClick={close} />
+        </div>
         {pickDoor ? (
           <div className="grid grid-cols-2 gap-2">
             {map.buildings
@@ -58,10 +89,15 @@ export function SabotageMenu() {
                   key={type}
                   disabled={disabled}
                   onClick={() => (type === 'DOOR_LOCK' ? setPickDoor(true) : void fire(type))}
-                  className="rounded-xl border border-line bg-night p-3 text-left hover:border-laterite disabled:opacity-40"
+                  className={`tactile flex min-h-16 flex-col items-start gap-0.5 rounded-2xl border-2 border-b-ink bg-panel-2 p-3 text-left ${
+                    def.critical ? 'border-laterite/60 hover:border-laterite' : 'border-line hover:border-canal'
+                  }`}
                 >
-                  <div className={`font-semibold ${def.critical ? 'text-laterite' : 'text-paper'}`}>{t(`sabotage.${type}`)}</div>
-                  <div className="text-xs text-rain">{t(`sabotage.${type}.desc`)}</div>
+                  <span className={`flex items-center gap-1.5 font-display font-bold leading-tight ${def.critical ? 'text-laterite' : 'text-paper'}`}>
+                    {def.critical && <span aria-hidden className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-laterite" />}
+                    {t(`sabotage.${type}`)}
+                  </span>
+                  <span className="text-xs leading-snug text-rain">{t(`sabotage.${type}.desc`)}</span>
                 </button>
               );
             })}
@@ -79,13 +115,11 @@ export function MapOverlay() {
   if (panel?.kind !== 'map') return null;
   const w = typeof window === 'undefined' ? 600 : Math.min(window.innerWidth - 32, (window.innerHeight - 80) * 1.5, 960);
   return (
-    <div className="pointer-events-auto fixed inset-0 z-30 flex items-center justify-center bg-black/55 p-4" onClick={() => useGame.getState().set({ panel: null })}>
-      <div onClick={(e) => e.stopPropagation()} className="animate-rise">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="font-display text-lg">{t(`map.${useGame.getState().state?.mapId ?? 'kadalimukku_old_town'}`)}</span>
-          <button onClick={() => useGame.getState().set({ panel: null })} className="h-10 w-10 rounded-lg text-2xl text-rain hover:text-paper">
-            ×
-          </button>
+    <div className="pointer-events-auto fixed inset-0 z-30 flex items-center justify-center bg-ink/75 p-4" onClick={() => useGame.getState().set({ panel: null })}>
+      <div onClick={(e) => e.stopPropagation()} className="animate-screen-in">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <span className="headline min-w-0 truncate text-2xl leading-tight text-paper">{t(`map.${useGame.getState().state?.mapId ?? 'kadalimukku_old_town'}`)}</span>
+          <CloseButton onClick={() => useGame.getState().set({ panel: null })} />
         </div>
         <MapView width={w} labels />
       </div>
@@ -102,29 +136,51 @@ export function GameMenu() {
   if (panel?.kind !== 'menu') return null;
   const close = () => useGame.getState().set({ panel: null });
   return (
-    <div className="pointer-events-auto fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-3" onClick={close}>
-      <div className="animate-rise w-full max-w-sm space-y-3 rounded-2xl border border-line bg-panel p-5" onClick={(e) => e.stopPropagation()}>
-        <h2 className="font-display text-xl">{t('hud.menu')}</h2>
-        <label className="block text-sm">
-          <span className="text-mist">{t('set.master')}</span>
-          <input type="range" min={0} max={1} step={0.05} value={settings.masterVolume} onChange={(e) => settings.set({ masterVolume: +e.target.value })} className="w-full accent-[#3f7d5c]" />
+    <div className={`${SCRIM} z-40`} onClick={close}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('hud.menu')}
+        className="surface kasavu animate-screen-in w-full max-w-sm space-y-4 rounded-[var(--radius-card)] p-5 pt-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="headline text-2xl leading-tight text-paper">{t('hud.menu')}</h2>
+          <CloseButton onClick={close} />
+        </div>
+        <label className="block rounded-2xl border-2 border-line bg-ink/60 px-3 py-2.5 text-sm">
+          <span className="flex items-center justify-between font-semibold text-mist">
+            {t('set.master')}
+            <span className="font-display font-bold tabular-nums text-lamp">{Math.round(settings.masterVolume * 100)}%</span>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={settings.masterVolume}
+            onChange={(e) => settings.set({ masterVolume: +e.target.value })}
+            className="mt-1 w-full accent-lamp"
+          />
         </label>
-        <p className="hidden text-xs text-rain sm:block">{t('set.keys')}</p>
-        <Button full onClick={close}>
-          {t('hud.resume')}
-        </Button>
-        <Button
-          full
-          variant="danger"
-          onClick={() =>
-            void rooms.leave().then(() => {
-              useGame.getState().reset();
-              router.replace('/home');
-            })
-          }
-        >
-          {t('hud.leaveMatch')}
-        </Button>
+        <p className="hidden text-xs leading-snug text-rain sm:block">{t('set.keys')}</p>
+        <div className="grid gap-2">
+          <Button full size="lg" variant="gold" onClick={close}>
+            {t('hud.resume')}
+          </Button>
+          <Button
+            full
+            variant="danger"
+            onClick={() =>
+              void rooms.leave().then(() => {
+                useGame.getState().reset();
+                router.replace('/home');
+              })
+            }
+          >
+            {t('hud.leaveMatch')}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -141,22 +197,35 @@ export function RoleReveal() {
   if (phase !== 'ROLE_REVEAL' || !role) return null;
   const isCat = role.role === 'CAT';
   const fellow = players.filter((p) => role.fellowCats.some((c) => c.id === p.id));
+  // This screen is private to the viewer, so tinting by their own role is safe.
+  const glow = isCat ? 'var(--color-lamp)' : 'var(--color-leaf)';
   return (
-    <div className="pointer-events-auto fixed inset-0 z-50 flex flex-col items-center justify-center bg-ink/95 p-6 text-center">
-      <div className="animate-rise text-mist">{t('role.youAre')}</div>
-      <div className={`animate-rise font-display text-5xl sm:text-6xl ${isCat ? 'text-lamp' : 'text-leaf'}`}>{t(`role.${role.role}`)}</div>
-      <div className="my-4">{isCat ? <CatForm size={140} /> : null}</div>
-      <div className="mb-1 rounded-md bg-panel-2 px-2 py-0.5 text-xs uppercase tracking-widest text-rain">{t(`mode.${modeId}`)}</div>
-      <p className="max-w-md text-mist">{t((isCat ? getMode(modeId).catGoalKey : getMode(modeId).humanGoalKey) as I18nKey)}</p>
-      {!isCat && <p className="mt-2 text-sm text-rain">{t('role.catsAmong', { n: catCount })}</p>}
+    <div
+      className="pointer-events-auto fixed inset-0 z-50 flex flex-col items-center justify-center overflow-y-auto bg-ink p-6 text-center pt-safe pb-safe"
+      style={{ background: `radial-gradient(circle at 50% 38%, color-mix(in srgb, ${glow} 16%, transparent) 0%, transparent 55%), var(--color-ink)` }}
+    >
+      <div className="animate-rise font-display text-lg font-bold uppercase tracking-widest text-mist">{t('role.youAre')}</div>
+      <div className={`headline animate-screen-in text-5xl leading-tight sm:text-6xl ${isCat ? 'text-lamp' : 'text-leaf'}`}>{t(`role.${role.role}`)}</div>
+      <div className="mt-1 flex items-center gap-2" aria-hidden>
+        <span className="block h-[3px] w-12 rounded-full bg-lamp" />
+        <span className="block h-[3px] w-3 rounded-full bg-gold-deep" />
+      </div>
+      <div className="my-4 animate-rise">{isCat ? <CatForm size={140} /> : null}</div>
+      <div className="mb-2">
+        <Badge tone="info">{t(`mode.${modeId}`)}</Badge>
+      </div>
+      <p className="max-w-md leading-snug text-paper">{t((isCat ? getMode(modeId).catGoalKey : getMode(modeId).humanGoalKey) as I18nKey)}</p>
+      {!isCat && <p className="mt-2 text-sm leading-snug text-rain">{t('role.catsAmong', { n: catCount })}</p>}
       {isCat && fellow.length > 0 && (
-        <div className="mt-5">
-          <div className="mb-2 text-sm text-rain">{t('role.fellowCats')}</div>
-          <div className="flex justify-center gap-4">
+        <div className="surface animate-rise mt-5 rounded-[var(--radius-card)] px-5 py-3">
+          <div className="mb-2 font-display text-sm font-bold leading-tight text-rain">{t('role.fellowCats')}</div>
+          <div className="flex flex-wrap justify-center gap-4">
             {fellow.map((p) => (
               <div key={p.id} className="flex flex-col items-center">
-                <CharacterAvatar appearance={p.appearance} size={64} />
-                <span className="text-sm text-lamp">{p.name}</span>
+                <span className="overflow-hidden rounded-2xl border-2 border-lamp/60 bg-night">
+                  <CharacterAvatar appearance={p.appearance} size={64} />
+                </span>
+                <span className="mt-1 font-display text-sm font-bold text-lamp">{p.name}</span>
               </div>
             ))}
           </div>
@@ -175,20 +244,39 @@ export function ReportSplash() {
   const caller = state.players.find((p) => p.id === m.callerId);
   const victim = state.players.find((p) => p.id === m.reportedVictimId);
   return (
-    <div className="pointer-events-auto fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[radial-gradient(circle,#2a1612_0%,#0e1512_70%)] p-6 text-center">
-      <div className="animate-rise font-display text-5xl text-laterite sm:text-6xl">{t(m.reason === 'report' ? 'meeting.report' : 'meeting.emergency')}</div>
+    <div
+      className="pointer-events-auto fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 overflow-hidden p-6 text-center"
+      style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--color-laterite-deep) 55%, var(--color-night)) 0%, var(--color-ink) 72%)' }}
+    >
+      {/* laterite band behind the title */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-1/2 h-28 -translate-y-[130%] -skew-y-3 bg-laterite-deep/55 shadow-[0_0_60px_var(--color-laterite-deep)]" />
+      <div className="headline animate-screen-in relative text-5xl uppercase leading-tight text-laterite sm:text-7xl">
+        {t(m.reason === 'report' ? 'meeting.report' : 'meeting.emergency')}
+      </div>
       {victim ? (
-        <div className="flex items-center gap-4">
-          {caller && <CharacterAvatar appearance={caller.appearance} size={80} />}
-          <span className="text-2xl text-rain">→</span>
-          <div className="rotate-90">
-            <CharacterAvatar appearance={victim.appearance} size={80} dim />
-          </div>
+        <div className="animate-rise relative flex items-center gap-4">
+          {caller && (
+            <span className="rounded-full bg-night/70 p-2 ring-2 ring-line">
+              <CharacterAvatar appearance={caller.appearance} size={80} mood="scared" />
+            </span>
+          )}
+          <svg viewBox="0 0 24 24" className="h-8 w-8 text-lamp" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+          <span className="rounded-full bg-ink/70 p-2 ring-2 ring-laterite/60">
+            <span className="block rotate-90">
+              <CharacterAvatar appearance={victim.appearance} size={80} dim />
+            </span>
+          </span>
         </div>
       ) : (
-        caller && <CharacterAvatar appearance={caller.appearance} size={96} animate />
+        caller && (
+          <span className="animate-rise relative rounded-full bg-night/70 p-3 ring-2 ring-lamp/60">
+            <CharacterAvatar appearance={caller.appearance} size={96} animate mood="suspicious" />
+          </span>
+        )
       )}
-      <p className="text-mist">
+      <p className="relative max-w-md text-lg leading-snug text-paper">
         {victim ? t('meeting.foundBody', { name: caller?.name ?? '', victim: victim.name }) : t('meeting.calledBy', { name: caller?.name ?? '' })}
       </p>
     </div>
@@ -203,11 +291,11 @@ export function RotateDevice() {
   if (!portrait || !touch) return null;
   return (
     <div className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-ink p-8 text-center">
-      <div className="animate-rotate-phone h-24 w-14 rounded-xl border-4 border-paper/80">
-        <div className="mx-auto mt-1 h-1 w-4 rounded bg-paper/60" />
+      <div className="animate-rotate-phone h-24 w-14 rounded-2xl border-4 border-lamp bg-night shadow-[0_0_24px_-6px_var(--color-lamp)]">
+        <div className="mx-auto mt-1.5 h-1 w-4 rounded-full bg-lamp/70" />
       </div>
-      <div className="font-display text-2xl">{t('rotate.title')}</div>
-      <p className="text-sm text-mist">{t('rotate.hint')}</p>
+      <div className="headline text-3xl leading-tight text-paper">{t('rotate.title')}</div>
+      <p className="max-w-xs text-sm leading-snug text-mist">{t('rotate.hint')}</p>
     </div>
   );
 }
@@ -234,16 +322,19 @@ export function CameraPanel() {
   };
   const w = typeof window === 'undefined' ? 600 : Math.min(window.innerWidth - 32, (window.innerHeight - 110) * 1.5, 960);
   return (
-    <div className="pointer-events-auto fixed inset-0 z-40 flex items-center justify-center bg-black/65 p-4" onClick={close}>
-      <div onClick={(e) => e.stopPropagation()} className="animate-rise">
+    <div className="pointer-events-auto fixed inset-0 z-40 flex items-center justify-center bg-ink/80 p-4" onClick={close}>
+      <div onClick={(e) => e.stopPropagation()} className="animate-screen-in">
         <div className="mb-2 flex items-center justify-between gap-3">
-          <div>
-            <div className="font-display text-lg">{t('cameras.title')}</div>
-            <div className={`text-xs ${online ? 'text-rain' : 'text-laterite'}`}>{online ? t('cameras.hint') : t('cameras.offline')}</div>
+          <div className="min-w-0">
+            <div className="headline flex items-center gap-2 text-2xl leading-tight text-paper">
+              <span aria-hidden className={`h-2.5 w-2.5 shrink-0 rounded-full ${online ? 'animate-pulse bg-laterite' : 'bg-rain'}`} />
+              {t('cameras.title')}
+            </div>
+            <div className="mt-0.5">
+              {online ? <span className="text-xs leading-snug text-rain">{t('cameras.hint')}</span> : <Badge tone="danger">{t('cameras.offline')}</Badge>}
+            </div>
           </div>
-          <button onClick={close} className="h-10 w-10 shrink-0 rounded-lg text-2xl text-rain hover:text-paper" aria-label="close">
-            ×
-          </button>
+          <CloseButton onClick={close} />
         </div>
         <CameraFeedView width={w} />
       </div>
@@ -258,10 +349,13 @@ export function InfectionOverlay() {
   const n = useSecondsUntil(until);
   if (!until) return null;
   return (
-    <div className="pointer-events-auto fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(circle,rgba(40,70,30,0.55)_0%,rgba(8,12,8,0.92)_70%)] p-6 text-center">
-      <div className="animate-pulse font-display text-4xl text-lamp sm:text-5xl">{t('infection.youInfected')}</div>
+    <div
+      className="pointer-events-auto fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 p-6 text-center"
+      style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--color-moss-deep) 60%, transparent) 0%, color-mix(in srgb, var(--color-ink) 94%, transparent) 70%)' }}
+    >
+      <div className="headline animate-pulse text-4xl leading-tight text-lamp sm:text-5xl">{t('infection.youInfected')}</div>
       <CatForm size={120} />
-      <p className="text-mist">{t('infection.turning', { n })}</p>
+      <p className="rounded-full border-2 border-lamp/50 bg-ink/80 px-4 py-1.5 font-display font-bold leading-tight text-paper">{t('infection.turning', { n })}</p>
     </div>
   );
 }

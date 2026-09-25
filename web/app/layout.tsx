@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Baloo+Chettan+2:wght@500;700;800&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Baloo+Chettan+2:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap"
         />
       </head>
       <body className="h-full">

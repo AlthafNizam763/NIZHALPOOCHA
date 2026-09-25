@@ -158,7 +158,11 @@ function wire(s: GameSocket) {
   s.on(S2C.PLAYER_KILLED, (p) => {
     // Only the victim and the Cats ever receive this event.
     if (p.you || p.byYou) audio.play('kill');
-    game().set({ knownKills: [...game().knownKills, p.victimId], ...(p.you ? { panel: null } : {}) });
+    game().set({
+      knownKills: [...game().knownKills, p.victimId],
+      ...(p.you ? { panel: null } : {}),
+      ...(p.you || p.byYou ? { killScene: { victimId: p.victimId, asKiller: !p.you, at: Date.now() } } : {}),
+    });
   });
   s.on(S2C.PLAYER_INFECTED, (p) => {
     // Only the victim and the Cats ever receive this.

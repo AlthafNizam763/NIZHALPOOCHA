@@ -22,8 +22,8 @@ export function CatForm({ size = 120, className = '' }: { size?: number; classNa
       {/* kasavu-gold collar hint */}
       <path d="M44 66 Q60 74 76 66" fill="none" stroke="#d8b640" strokeWidth="2" opacity="0.8" />
       {/* eyes */}
-      <ellipse cx="50" cy="48" rx="5" ry="3.4" fill="#e9b04f" />
-      <ellipse cx="70" cy="48" rx="5" ry="3.4" fill="#e9b04f" />
+      <ellipse cx="50" cy="48" rx="5" ry="3.4" fill="#f1b43e" />
+      <ellipse cx="70" cy="48" rx="5" ry="3.4" fill="#f1b43e" />
       <ellipse cx="50" cy="48" rx="1.2" ry="3" fill="#070a09" />
       <ellipse cx="70" cy="48" rx="1.2" ry="3" fill="#070a09" />
       {/* whiskers */}

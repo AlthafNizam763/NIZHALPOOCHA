@@ -6,6 +6,7 @@ import { authErrorKey, resetPassword, signInEmail } from '@/services/auth';
 import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Controls';
+import { Notice } from '@/components/ui/Feedback';
 import { AuthShell, AuthSwitch } from '@/components/auth/AuthShell';
 
 export default function LoginPage() {
@@ -53,9 +54,9 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             )}
-            {error && <p className="text-sm text-laterite">{t(error)}</p>}
-            {info && <p className="text-sm text-leaf">{t(info)}</p>}
-            <Button type="submit" full size="lg" loading={busy}>
+            {error && <Notice tone="danger">{t(error)}</Notice>}
+            {info && <Notice tone="good">{t(info)}</Notice>}
+            <Button type="submit" variant="gold" full size="lg" loading={busy}>
               {forgot ? t('auth.sendReset') : t('auth.login')}
             </Button>
           </form>

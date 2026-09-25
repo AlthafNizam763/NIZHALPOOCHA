@@ -298,7 +298,7 @@ export class Stage {
     c.fillStyle = color;
     c.textAlign = o.align ?? 'left';
     c.textBaseline = 'alphabetic';
-    const family = o.font === 'body' ? 'Manrope, "Noto Sans Malayalam", sans-serif' : '"Baloo Chettan 2", "Noto Sans Malayalam", sans-serif';
+    const family = o.font === 'body' ? 'Manrope, "Baloo Chettan 2", sans-serif' : '"Baloo Chettan 2", sans-serif';
     c.font = `${o.weight ?? 700} ${size}px ${family}`;
     c.fillText(str, x, y);
     c.restore();
