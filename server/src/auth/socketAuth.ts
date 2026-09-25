@@ -1,5 +1,5 @@
 import type { Socket } from 'socket.io';
-import { adminAuth } from './firebaseAdmin';
+import { adminAuth, adminHasCredentials } from './firebaseAdmin';
 import { config } from '../utils/config';
 import { createLogger } from '../utils/logger';
 
@@ -27,7 +27,8 @@ export async function authenticateSocket(socket: Socket, next: (err?: Error) => 
   try {
     const firebase = adminAuth();
     if (typeof auth.token === 'string' && auth.token.length > 0 && firebase) {
-      const decoded = await firebase.verifyIdToken(auth.token, true);
+      // The revocation check needs a service account; without one it would reject every token.
+      const decoded = await firebase.verifyIdToken(auth.token, adminHasCredentials());
       (socket.data as SocketData).identity = {
         uid: decoded.uid,
         tokenName: (decoded.name as string | undefined) ?? null,
@@ -40,10 +41,12 @@ export async function authenticateSocket(socket: Socket, next: (err?: Error) => 
       (socket.data as SocketData).identity = { uid: auth.devUid, tokenName: null, isAnonymous: true, isDev: true };
       return next();
     }
-    log.warn(`Rejected connection ${socket.id}: no valid credentials`);
+    const why = typeof auth.token === 'string' && auth.token ? 'token sent but Firebase Admin is not configured' : typeof auth.devUid === 'string' ? 'dev identity sent but dev auth is off' : 'no credentials';
+    log.warn(`Rejected connection ${socket.id}: ${why}`);
     next(new Error('UNAUTHORIZED'));
   } catch (err) {
-    log.warn(`Token verification failed for ${socket.id}`, (err as Error).message);
+    const e = err as { code?: string; message?: string };
+    log.warn(`Token verification failed for ${socket.id}: ${e.code ?? ''} ${e.message ?? ''}`.trim());
     next(new Error('UNAUTHORIZED'));
   }
 }

@@ -32,7 +32,8 @@ docker run -p 4000:4000 --env-file server/.env nizhalpoocha-server
 NODE_ENV=production
 PORT=4000                                   # or the platform's $PORT
 CORS_ORIGINS=https://your-app.vercel.app,https://localhost,capacitor://localhost
-FIREBASE_SERVICE_ACCOUNT_BASE64=<base64 of the service-account JSON>
+FIREBASE_PROJECT_ID=<your project id>       # required: without it every sign-in is rejected
+FIREBASE_SERVICE_ACCOUNT_BASE64=<base64 of the service-account JSON>   # needed to save match results
 ALLOW_DEV_AUTH=false                        # ignored in production anyway
 VOICE_ICE_SERVERS=[{"urls":"stun:stun.l.google.com:19302"},{"urls":"turn:turn.example.com:3478","username":"…","credential":"…"}]
 ```
