@@ -23,6 +23,8 @@ export function matchRewards(p: { won: boolean; survived: boolean; stats: Player
     (p.survived ? 10 : 0) +
     s.tasksDone * 5 +
     s.kills * 10 +
+    s.infections * 10 +
+    s.objectives * 10 +
     s.correctVotes * 10 +
     s.reports * 5 +
     s.repairs * 5;
@@ -32,6 +34,8 @@ export function matchRewards(p: { won: boolean; survived: boolean; stats: Player
 export const EMPTY_STATS: PlayerMatchStats = {
   tasksDone: 0,
   kills: 0,
+  infections: 0,
+  objectives: 0,
   sabotages: 0,
   reports: 0,
   meetingsCalled: 0,

@@ -66,11 +66,32 @@ legitimate reveal contains Cat information.
 All client payloads are parsed with zod (`shared/src/events`); every socket also has a per-event
 token-bucket rate limit, and `maxHttpBufferSize` is 16 KB.
 
-## Win conditions (`server/src/game/winConditions.ts`)
+## Maps and game modes
 
-- Humans: all Cats eliminated, or all Human tasks complete (a gone Human only counts the tasks they finished).
-- Cats: alive Cats ≥ alive Humans, or a critical sabotage timer expires.
-Evaluated after kills, ejections (after the result screen), task completion and departures.
+Maps and modes are configured independently and combined per room (`RoomSettings.mapId` + `mode`).
+
+- **Maps** (`shared/src/maps/`, registry in `maps/index.ts`): Kadalimukku Old Town, Kadalimukku New Town,
+  Backwater Village, Neo Kerala, Nizhalam. A `GameMapDef` holds geometry (zones = rooms, colliders, walls,
+  doors, water, bridges, hazards), spawns, task / sabotage / meeting locations, mode objectives (antidote
+  parts), surveillance (CCTV cameras, patrol drones, security consoles), a visual theme, map rules (e.g.
+  vision multiplier) and `supportedModes`. Every map is built with `createMapBuilder`, so collision rules are
+  identical everywhere. Sabotages available on a map are derived from its stations.
+- **Modes** (`shared/src/game-modes/`): `ClassicMode`, `HuntMode`, `InfectionMode`, `FutureMode`. A
+  `GameModeDefinition` is data + pure rules: Cat limits, what a Cat's attack does (kill / infect), emergency
+  meetings, vision and cooldown multipliers, survival clock, antidote objective, surveillance alerts, required
+  map features and `evaluateWin`. `Match` reads these values — it never branches on map or mode ids.
+- `applySettingsPatch` keeps map and mode compatible (changing only the map falls back to its default mode).
+
+## Win conditions (per mode, `evaluateWin`)
+
+- Classic / Future — Humans: all Cats eliminated or all tasks complete. Cats: Cats ≥ Humans, or a critical
+  sabotage expires.
+- Hunt — as Classic, plus Humans win when the survival clock (paused during meetings) runs out.
+- Infection — Cats infect instead of killing (HUMAN → INFECTED, frozen for a few seconds → CAT, delivered
+  privately). Humans win by ejecting every Cat, completing the escape systems (tasks), collecting every
+  antidote part, or surviving the clock. Cats win when no Humans remain (no parity rule).
+A Human who is gone or converted only counts the tasks they finished. Evaluated after kills / infections,
+ejections (after the result screen), task and objective completion, the survival clock and departures.
 
 ## Socket events
 
@@ -136,9 +157,12 @@ Realtime Database: `status/{uid} = { state: online|in_lobby|in_game|offline, las
 
 ## Extending
 
-- **New map:** add a `GameMapDef` in `shared/src/maps/`, register it in `maps/index.ts` and `MAP_IDS`.
-  Rendering, minimap, collision, stations and reachability tests all derive from the definition.
+- **New map:** build a `GameMapDef` with `createMapBuilder` in `shared/src/maps/`, register it in
+  `maps/index.ts` and `MAP_IDS`, and add its zone names / signs to the i18n files. Rendering, minimap,
+  collision, stations and the per-map reachability and consistency tests all derive from the definition.
 - **New task:** add to `TASK_TYPES`/`TASK_DEFS`, place a station on a map, reuse a mini-game template
   or add one in `web/components/game/minigames`.
-- **New sabotage:** add to `SABOTAGE_TYPES`/`SABOTAGE_DEFS` and handle its effect in `Match`.
-- **New role / mode:** `Role`, `GAME_MODES` and `RoomSettings.mode` are the extension points.
+- **New sabotage:** add to `SABOTAGE_TYPES`/`SABOTAGE_DEFS`, place stations for it on maps, and handle its
+  effect in `Match`.
+- **New mode:** add a `GameModeDefinition` in `shared/src/game-modes/`, register it in `GAME_MODES` and the
+  mode registry, and list it in the `supportedModes` of the maps it suits.

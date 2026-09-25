@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SABOTAGE_DEFS, SABOTAGE_TYPES, getMap, type SabotageType } from '@nizhal/shared';
+import { SABOTAGE_DEFS, availableSabotages, getMap, getMode, type SabotageType } from '@nizhal/shared';
 import { useGame, EMPTY_PLAYERS } from '@/state/gameStore';
 import { useUi } from '@/state/uiStore';
 import { serverNow } from '@/state/connectionStore';
@@ -13,7 +13,7 @@ import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';
 import { CatForm } from '@/components/ui/CatForm';
 import { CharacterAvatar } from '@/components/ui/CharacterAvatar';
-import { MapView } from './MapView';
+import { CameraFeedView, MapView } from './MapView';
 
 // ── Cat sabotage menu ─────────────────────────────────────────────────────
 export function SabotageMenu() {
@@ -24,7 +24,7 @@ export function SabotageMenu() {
   const locked = useGame((s) => (s.state?.lockedDoorIds.length ?? 0) > 0);
   const [pickDoor, setPickDoor] = useState(false);
   if (panel?.kind !== 'sabotage') return null;
-  const map = getMap(useGame.getState().state?.mapId ?? 'kadalimukku_night');
+  const map = getMap(useGame.getState().state?.mapId ?? 'kadalimukku_old_town');
   const close = () => useGame.getState().set({ panel: null });
 
   const fire = async (type: SabotageType, building?: string) => {
@@ -50,7 +50,7 @@ export function SabotageMenu() {
           </div>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
-            {SABOTAGE_TYPES.map((type) => {
+            {availableSabotages(map).map((type) => {
               const def = SABOTAGE_DEFS[type];
               const disabled = def.major ? !!active : locked;
               return (
@@ -82,7 +82,7 @@ export function MapOverlay() {
     <div className="pointer-events-auto fixed inset-0 z-30 flex items-center justify-center bg-black/55 p-4" onClick={() => useGame.getState().set({ panel: null })}>
       <div onClick={(e) => e.stopPropagation()} className="animate-rise">
         <div className="mb-2 flex items-center justify-between">
-          <span className="font-display text-lg">{t('map.kadalimukku_night')}</span>
+          <span className="font-display text-lg">{t(`map.${useGame.getState().state?.mapId ?? 'kadalimukku_old_town'}`)}</span>
           <button onClick={() => useGame.getState().set({ panel: null })} className="h-10 w-10 rounded-lg text-2xl text-rain hover:text-paper">
             ×
           </button>
@@ -136,6 +136,7 @@ export function RoleReveal() {
   const phase = useGame((s) => s.state?.phase);
   const role = useGame((s) => s.role);
   const catCount = useGame((s) => s.state?.settings.catCount ?? 1);
+  const modeId = useGame((s) => s.state?.settings.mode ?? 'classic');
   const players = useGame((s) => s.state?.players ?? EMPTY_PLAYERS);
   if (phase !== 'ROLE_REVEAL' || !role) return null;
   const isCat = role.role === 'CAT';
@@ -145,7 +146,8 @@ export function RoleReveal() {
       <div className="animate-rise text-mist">{t('role.youAre')}</div>
       <div className={`animate-rise font-display text-5xl sm:text-6xl ${isCat ? 'text-lamp' : 'text-leaf'}`}>{t(`role.${role.role}`)}</div>
       <div className="my-4">{isCat ? <CatForm size={140} /> : null}</div>
-      <p className="max-w-md text-mist">{isCat ? t('role.catGoal') : t('role.humanGoal')}</p>
+      <div className="mb-1 rounded-md bg-panel-2 px-2 py-0.5 text-xs uppercase tracking-widest text-rain">{t(`mode.${modeId}`)}</div>
+      <p className="max-w-md text-mist">{t((isCat ? getMode(modeId).catGoalKey : getMode(modeId).humanGoalKey) as I18nKey)}</p>
       {!isCat && <p className="mt-2 text-sm text-rain">{t('role.catsAmong', { n: catCount })}</p>}
       {isCat && fellow.length > 0 && (
         <div className="mt-5">
@@ -218,4 +220,48 @@ export function secondsUntil(at: number | null | undefined): number {
 export function useSecondsUntil(at: number | null | undefined): number {
   useTicker(250);
   return secondsUntil(at);
+}
+
+// ── Security console camera feed ─────────────────────────────────────────
+export function CameraPanel() {
+  const t = useT();
+  const panel = useGame((s) => s.panel);
+  const online = useGame((s) => s.state?.modeState.camerasOnline ?? true);
+  if (panel?.kind !== 'cameras') return null;
+  const close = () => {
+    void net.watchCameras(false);
+    useGame.getState().set({ panel: null, cameraFeed: null });
+  };
+  const w = typeof window === 'undefined' ? 600 : Math.min(window.innerWidth - 32, (window.innerHeight - 110) * 1.5, 960);
+  return (
+    <div className="pointer-events-auto fixed inset-0 z-40 flex items-center justify-center bg-black/65 p-4" onClick={close}>
+      <div onClick={(e) => e.stopPropagation()} className="animate-rise">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div>
+            <div className="font-display text-lg">{t('cameras.title')}</div>
+            <div className={`text-xs ${online ? 'text-rain' : 'text-laterite'}`}>{online ? t('cameras.hint') : t('cameras.offline')}</div>
+          </div>
+          <button onClick={close} className="h-10 w-10 shrink-0 rounded-lg text-2xl text-rain hover:text-paper" aria-label="close">
+            ×
+          </button>
+        </div>
+        <CameraFeedView width={w} />
+      </div>
+    </div>
+  );
+}
+
+// ── Infection: frozen while turning ──────────────────────────────────────
+export function InfectionOverlay() {
+  const t = useT();
+  const until = useGame((s) => s.self?.infectedUntil ?? null);
+  const n = useSecondsUntil(until);
+  if (!until) return null;
+  return (
+    <div className="pointer-events-auto fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(circle,rgba(40,70,30,0.55)_0%,rgba(8,12,8,0.92)_70%)] p-6 text-center">
+      <div className="animate-pulse font-display text-4xl text-lamp sm:text-5xl">{t('infection.youInfected')}</div>
+      <CatForm size={120} />
+      <p className="text-mist">{t('infection.turning', { n })}</p>
+    </div>
+  );
 }

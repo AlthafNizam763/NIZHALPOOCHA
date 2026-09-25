@@ -110,9 +110,16 @@ export default function SummaryPage() {
               <li key={p.id} className="flex items-center gap-3 rounded-xl bg-night p-1.5">
                 <CharacterAvatar appearance={p.appearance} size={36} dim={p.status !== 'alive'} />
                 <span className="flex-1 truncate text-sm">{p.name}</span>
-                <span className={`text-xs font-semibold ${p.role === 'CAT' ? 'text-lamp' : 'text-leaf'}`}>{t(`role.${p.role}`)}</span>
+                <span className={`text-xs font-semibold ${p.role === 'CAT' ? 'text-lamp' : 'text-leaf'}`}>
+                  {t(`role.${p.role}`)}
+                  {p.infected && <span className="ml-1 font-normal text-rain">({t('end.infected')})</span>}
+                </span>
                 <span className="w-24 text-right text-xs text-rain">
-                  {p.role === 'CAT' ? `${p.stats.kills} ${t('summary.kills').toLowerCase()}` : `${p.stats.tasksDone} ${t('hud.tasks').toLowerCase()}`}
+                  {p.role === 'CAT'
+                    ? p.stats.infections > 0
+                      ? `${p.stats.infections} ${t('summary.infections').toLowerCase()}`
+                      : `${p.stats.kills} ${t('summary.kills').toLowerCase()}`
+                    : `${p.stats.tasksDone} ${t('hud.tasks').toLowerCase()}`}
                 </span>
               </li>
             ))}

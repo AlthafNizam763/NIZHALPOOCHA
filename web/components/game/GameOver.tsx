@@ -50,6 +50,7 @@ export function GameOver() {
               )}
             </div>
             <span className="font-semibold text-lamp">{c.name}</span>
+            {c.infected && <span className="text-xs text-rain">{t('end.infected')}</span>}
           </div>
         ))}
       </div>

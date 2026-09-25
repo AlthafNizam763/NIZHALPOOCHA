@@ -14,6 +14,7 @@ import { SABOTAGE_TYPES } from '../game-rules/sabotage';
 import { partialSettingsSchema } from '../game-rules/settings';
 import type {
   AckFn,
+  CameraFeed,
   ChatMessage,
   GameEndView,
   GameStateView,
@@ -49,6 +50,9 @@ export const C2S = {
   CAT_SABOTAGE: 'cat:sabotage',
   SABOTAGE_REPAIR_START: 'sabotage:repairStart',
   SABOTAGE_REPAIR: 'sabotage:repair',
+  OBJECTIVE_START: 'objective:start',
+  OBJECTIVE_COLLECT: 'objective:collect',
+  CAMERAS_WATCH: 'cameras:watch',
   MEETING_START: 'meeting:start',
   MEETING_CHAT: 'meeting:chat',
   VOTE_CAST: 'vote:cast',
@@ -76,6 +80,11 @@ export const S2C = {
   SABOTAGE_STARTED: 'sabotage:started',
   SABOTAGE_ENDED: 'sabotage:ended',
   PLAYER_KILLED: 'player:killed',
+  PLAYER_INFECTED: 'player:infected',
+  ROLE_CHANGED: 'game:roleChanged',
+  OBJECTIVE_COLLECTED: 'objective:collected',
+  SURVEILLANCE_ALERT: 'surveillance:alert',
+  CAMERA_FEED: 'cameras:feed',
   MEETING_STARTED: 'meeting:started',
   MEETING_CHAT: 'meeting:chat',
   VOTING_STARTED: 'voting:started',
@@ -138,6 +147,8 @@ export const schemas = {
   kill: z.object({ targetId: idSchema }),
   sabotage: z.object({ type: z.enum(SABOTAGE_TYPES), targetBuildingId: idSchema.optional() }),
   repair: z.object({ stationId: idSchema }),
+  objective: z.object({ objectiveId: idSchema }),
+  camerasWatch: z.object({ watching: z.boolean() }),
   chat: z
     .object({ text: z.string().trim().min(1).max(GAME.MAX_CHAT_LENGTH).optional(), quickId: z.string().max(32).optional() })
     .refine((v) => !!v.text !== !!v.quickId, 'text xor quickId'),
@@ -185,6 +196,9 @@ export interface ClientToServerEvents {
   [C2S.CAT_SABOTAGE]: (p: { type: SabotageType; targetBuildingId?: string }, ack: AckFn) => void;
   [C2S.SABOTAGE_REPAIR_START]: (p: { stationId: string }, ack: AckFn) => void;
   [C2S.SABOTAGE_REPAIR]: (p: { stationId: string }, ack: AckFn) => void;
+  [C2S.OBJECTIVE_START]: (p: { objectiveId: string }, ack: AckFn) => void;
+  [C2S.OBJECTIVE_COLLECT]: (p: { objectiveId: string }, ack: AckFn) => void;
+  [C2S.CAMERAS_WATCH]: (p: { watching: boolean }, ack: AckFn) => void;
   [C2S.MEETING_START]: (ack: AckFn) => void;
   [C2S.MEETING_CHAT]: (p: ChatPayload, ack: AckFn) => void;
   [C2S.VOTE_CAST]: (p: { targetId: string | 'skip' }, ack: AckFn) => void;
@@ -211,6 +225,14 @@ export interface ServerToClientEvents {
   [S2C.SABOTAGE_STARTED]: (p: { type: SabotageType }) => void;
   [S2C.SABOTAGE_ENDED]: (p: { type: SabotageType; repaired: boolean }) => void;
   [S2C.PLAYER_KILLED]: (p: { victimId: string; x: number; y: number; byYou: boolean; you: boolean }) => void;
+  /** Only the victim and the Cats receive this. */
+  [S2C.PLAYER_INFECTED]: (p: { victimId: string; byYou: boolean; you: boolean; turnsAt: number }) => void;
+  /** A player's private role changed mid-match (infected, or a fellow Cat joined). */
+  [S2C.ROLE_CHANGED]: (p: { role: RoleInfo; reason: 'infected' | 'fellow_joined' }) => void;
+  [S2C.OBJECTIVE_COLLECTED]: (p: { objectiveId: string; byName: string; collected: number; total: number }) => void;
+  /** A working camera or drone saw an attack in this zone (Future mode). */
+  [S2C.SURVEILLANCE_ALERT]: (p: { zoneId: string }) => void;
+  [S2C.CAMERA_FEED]: (feed: CameraFeed) => void;
   [S2C.MEETING_STARTED]: (p: { reason: 'report' | 'emergency'; callerId: string; reportedVictimId: string | null }) => void;
   [S2C.MEETING_CHAT]: (msg: ChatMessage) => void;
   [S2C.VOTING_STARTED]: (p: { votingEndsAt: number }) => void;

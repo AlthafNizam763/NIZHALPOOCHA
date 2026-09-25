@@ -1,4 +1,5 @@
 export const TASK_TYPES = [
+  // Town
   'repair_fuse',
   'restore_streetlight',
   'fix_cctv',
@@ -9,6 +10,23 @@ export const TASK_TYPES = [
   'repair_auto_battery',
   'clear_blockage',
   'connect_wires',
+  // Modern / future
+  'reboot_server',
+  'calibrate_drone',
+  'sync_cctv',
+  'charge_ev',
+  'align_solar',
+  'patch_firewall',
+  'reset_signal',
+  // Village / backwater
+  'pole_boat',
+  'mend_net',
+  'drain_paddy',
+  'fuel_boat',
+  // Quarantine
+  'collect_sample',
+  'purify_water',
+  'repair_radio_mast',
 ] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
 
@@ -29,17 +47,37 @@ export interface TaskDef {
   minDurationMs: number;
 }
 
+const MIN_MS: Record<MinigameKind, number> = { wires: 2000, numbers: 1500, timing: 1200, memory: 3000, arrange: 2000, clear: 1800 };
+
+function def(type: TaskType, minigame: MinigameKind, difficulty: 1 | 2 | 3): TaskDef {
+  return { type, nameKey: `task.${type}`, minigame, difficulty, minDurationMs: MIN_MS[minigame] };
+}
+
 export const TASK_DEFS: Record<TaskType, TaskDef> = {
-  repair_fuse: { type: 'repair_fuse', nameKey: 'task.repair_fuse', minigame: 'numbers', difficulty: 1, minDurationMs: 1500 },
-  restore_streetlight: { type: 'restore_streetlight', nameKey: 'task.restore_streetlight', minigame: 'timing', difficulty: 2, minDurationMs: 1200 },
-  fix_cctv: { type: 'fix_cctv', nameKey: 'task.fix_cctv', minigame: 'memory', difficulty: 2, minDurationMs: 3000 },
-  repair_pump: { type: 'repair_pump', nameKey: 'task.repair_pump', minigame: 'numbers', difficulty: 1, minDurationMs: 1500 },
-  restart_generator: { type: 'restart_generator', nameKey: 'task.restart_generator', minigame: 'timing', difficulty: 2, minDurationMs: 1200 },
-  fix_router: { type: 'fix_router', nameKey: 'task.fix_router', minigame: 'memory', difficulty: 2, minDurationMs: 3000 },
-  arrange_shop: { type: 'arrange_shop', nameKey: 'task.arrange_shop', minigame: 'arrange', difficulty: 1, minDurationMs: 2000 },
-  repair_auto_battery: { type: 'repair_auto_battery', nameKey: 'task.repair_auto_battery', minigame: 'wires', difficulty: 2, minDurationMs: 2000 },
-  clear_blockage: { type: 'clear_blockage', nameKey: 'task.clear_blockage', minigame: 'clear', difficulty: 1, minDurationMs: 1800 },
-  connect_wires: { type: 'connect_wires', nameKey: 'task.connect_wires', minigame: 'wires', difficulty: 2, minDurationMs: 2000 },
+  repair_fuse: def('repair_fuse', 'numbers', 1),
+  restore_streetlight: def('restore_streetlight', 'timing', 2),
+  fix_cctv: def('fix_cctv', 'memory', 2),
+  repair_pump: def('repair_pump', 'numbers', 1),
+  restart_generator: def('restart_generator', 'timing', 2),
+  fix_router: def('fix_router', 'memory', 2),
+  arrange_shop: def('arrange_shop', 'arrange', 1),
+  repair_auto_battery: def('repair_auto_battery', 'wires', 2),
+  clear_blockage: def('clear_blockage', 'clear', 1),
+  connect_wires: def('connect_wires', 'wires', 2),
+  reboot_server: def('reboot_server', 'numbers', 2),
+  calibrate_drone: def('calibrate_drone', 'timing', 2),
+  sync_cctv: def('sync_cctv', 'memory', 2),
+  charge_ev: def('charge_ev', 'wires', 1),
+  align_solar: def('align_solar', 'arrange', 2),
+  patch_firewall: def('patch_firewall', 'memory', 3),
+  reset_signal: def('reset_signal', 'timing', 1),
+  pole_boat: def('pole_boat', 'timing', 1),
+  mend_net: def('mend_net', 'clear', 1),
+  drain_paddy: def('drain_paddy', 'clear', 2),
+  fuel_boat: def('fuel_boat', 'numbers', 1),
+  collect_sample: def('collect_sample', 'memory', 2),
+  purify_water: def('purify_water', 'numbers', 2),
+  repair_radio_mast: def('repair_radio_mast', 'wires', 2),
 };
 
 /** A task assigned to a player for the current match. */

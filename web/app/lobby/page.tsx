@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GAME, catLimits, isInMatch, type Appearance, type RoomSettings } from '@nizhal/shared';
+import { GAME, catLimitsFor, isInMatch, type Appearance, type RoomSettings } from '@nizhal/shared';
 import { useAuth } from '@/state/authStore';
 import { useRoom } from '@/state/roomStore';
 import { useGame } from '@/state/gameStore';
@@ -45,7 +45,7 @@ export default function LobbyPage() {
   const isHost = room.hostId === user.uid;
   const count = room.players.length;
   const everyoneReady = room.players.every((p) => p.isHost || p.ready);
-  const lim = catLimits(Math.max(GAME.MIN_PLAYERS, count));
+  const lim = catLimitsFor(room.settings.mode, Math.max(GAME.MIN_PLAYERS, count));
   const catsValid = room.settings.catCount >= lim.min && room.settings.catCount <= lim.max;
   const canStart = isHost && count >= GAME.MIN_PLAYERS && everyoneReady && catsValid && room.phase === 'LOBBY';
   const countdown = room.phase === 'STARTING' && room.countdownEndsAt ? Math.max(0, Math.ceil((room.countdownEndsAt - serverNow()) / 1000)) : null;

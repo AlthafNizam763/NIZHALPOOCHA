@@ -1,11 +1,12 @@
 import {
   GAME,
   S2C,
-  catLimits,
+  applySettingsPatch,
+  catLimitsFor,
   isInMatch,
   voiceChannelFor,
   type VoiceSignal,
-  isValidCatCount,
+  isValidCatCountFor,
   roomSettingsSchema,
   type Appearance,
   type ErrorCode,
@@ -131,6 +132,7 @@ export class Room {
       status: this.match || this.lobbyPhase === 'STARTING' ? 'playing' : this.isFull ? 'full' : 'open',
       voiceChat: this.settings.voiceChat,
       mapId: this.settings.mapId,
+      mode: this.settings.mode,
     };
   }
 
@@ -241,8 +243,10 @@ export class Room {
   updateSettings(id: string, patch: PartialRoomSettings): Result {
     if (id !== this.hostId) return fail('NOT_HOST');
     if (this.match || this.lobbyPhase === 'STARTING') return fail('INVALID_PHASE');
-    const next = roomSettingsSchema.safeParse({ ...this.settings, ...patch });
-    if (!next.success) return fail('INVALID_CONFIG');
+    // Keeps map and mode compatible (changing the map may switch to its default mode).
+    const merged = applySettingsPatch(this.settings, patch);
+    const next = merged ? roomSettingsSchema.safeParse(merged) : null;
+    if (!next?.success) return fail('INVALID_CONFIG');
     if (next.data.maxPlayers < this.members.size) return fail('INVALID_CONFIG');
     this.settings = next.data;
     // Settings changed → readiness must be reconfirmed.
@@ -278,7 +282,7 @@ export class Room {
     const n = this.members.size;
     if (n < GAME.MIN_PLAYERS) return fail('NOT_ENOUGH_PLAYERS');
     if (n > GAME.MAX_PLAYERS) return fail('INVALID_CONFIG');
-    if (!isValidCatCount(n, this.settings.catCount)) return fail('INVALID_CONFIG');
+    if (!isValidCatCountFor(this.settings.mode, n, this.settings.catCount)) return fail('INVALID_CONFIG');
     for (const m of this.members.values()) {
       if (!m.connected) return fail('NOT_ALL_READY');
       if (m.id !== this.hostId && !m.ready) return fail('NOT_ALL_READY');
@@ -375,9 +379,9 @@ export class Room {
     for (const m of this.members.values()) m.leaveTimer?.cancel();
   }
 
-  /** Cat range valid for the current lobby size (shown in the settings UI). */
+  /** Cat range valid for the current lobby size and mode (shown in the settings UI). */
   catRange() {
-    return catLimits(Math.max(GAME.MIN_PLAYERS, this.members.size));
+    return catLimitsFor(this.settings.mode, Math.max(GAME.MIN_PLAYERS, this.members.size));
   }
 
   get inMatch(): boolean {

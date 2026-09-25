@@ -28,7 +28,7 @@ import {
 } from '@nizhal/shared';
 
 const URL = process.env.SIM_URL ?? 'http://localhost:4000';
-const MAP = getMap('kadalimukku_night');
+const MAP = getMap('kadalimukku_old_town');
 type S = Socket<Record<string, (...a: never[]) => void>, ClientToServerEvents>;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

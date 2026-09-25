@@ -160,11 +160,39 @@ function wire(s: GameSocket) {
     if (p.you || p.byYou) audio.play('kill');
     game().set({ knownKills: [...game().knownKills, p.victimId], ...(p.you ? { panel: null } : {}) });
   });
+  s.on(S2C.PLAYER_INFECTED, (p) => {
+    // Only the victim and the Cats ever receive this.
+    audio.play(p.you ? 'warning' : 'kill');
+    if (p.you) {
+      bridge.resetInput();
+      game().set({ panel: null });
+    }
+  });
+  s.on(S2C.ROLE_CHANGED, (p) => {
+    game().set({ role: p.role });
+    if (p.reason === 'infected') {
+      audio.play('reveal');
+      ui().toast('infection.turned', undefined, 'danger');
+    } else {
+      ui().toast('infection.fellowJoined', undefined, 'warn');
+    }
+  });
+  s.on(S2C.OBJECTIVE_COLLECTED, (p) => {
+    audio.play('taskDone');
+    ui().toast('objective.collected', { name: p.byName, n: p.collected, total: p.total }, 'good');
+    const panel = game().panel;
+    if (panel?.kind === 'objective' && panel.objectiveId === p.objectiveId) game().set({ panel: null });
+  });
+  s.on(S2C.SURVEILLANCE_ALERT, (p) => {
+    audio.play('warning');
+    ui().toast('alert.surveillance', { zone: t(`zone.${p.zoneId}` as Parameters<typeof t>[0]) }, 'danger');
+  });
+  s.on(S2C.CAMERA_FEED, (feed) => game().set({ cameraFeed: feed }));
   s.on(S2C.MEETING_STARTED, () => {
     audio.play('report');
     setTimeout(() => audio.play('meeting'), 600);
     bridge.resetInput();
-    game().set({ panel: null, chat: [], voteResult: null });
+    game().set({ panel: null, chat: [], voteResult: null, cameraFeed: null });
   });
   s.on(S2C.MEETING_CHAT, (msg) => game().set({ chat: [...game().chat.slice(-150), msg] }));
   s.on(S2C.VOTING_STARTED, () => audio.play('warning'));
@@ -252,6 +280,9 @@ export const actions = {
     request(C2S.CAT_SABOTAGE, { type, targetBuildingId }),
   repairStart: (stationId: string) => request(C2S.SABOTAGE_REPAIR_START, { stationId }),
   repair: (stationId: string) => request(C2S.SABOTAGE_REPAIR, { stationId }),
+  objectiveStart: (objectiveId: string) => request(C2S.OBJECTIVE_START, { objectiveId }),
+  objectiveCollect: (objectiveId: string) => request(C2S.OBJECTIVE_COLLECT, { objectiveId }),
+  watchCameras: (watching: boolean) => request(C2S.CAMERAS_WATCH, { watching }),
   emergency: () => request(C2S.MEETING_START),
   chat: (p: { text?: string; quickId?: string }) => request(C2S.MEETING_CHAT, p),
   vote: (targetId: string | 'skip') => request(C2S.VOTE_CAST, { targetId }),

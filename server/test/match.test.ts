@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_SETTINGS,
   GAME,
-  KADALIMUKKU_NIGHT as MAP,
+  KADALIMUKKU_OLD_TOWN as MAP,
   TASK_DEFS,
   type GameEndView,
   type GameStateView,
@@ -13,6 +13,7 @@ import {
 import { Match } from '../src/game/Match';
 import { ManualClock, RecordingOutbox, members } from './helpers';
 
+const BELL = MAP.meetingLocations[0]!;
 const TIMINGS = { roleRevealMs: 1000, reportSplashMs: 1000, voteResultMs: 1000, tickMs: 66, reconnectGraceMs: 5000 };
 
 function setup(n = 5, settings = {}) {
@@ -112,7 +113,7 @@ test('deaths stay hidden from the living until a meeting', () => {
 
 test('meeting → voting → eject cat → humans win', () => {
   const { m, clock, out, cats, humans, ended } = setup(5);
-  m.debugSetPosition(humans[0]!, MAP.emergency.x, MAP.emergency.y + 30);
+  m.debugSetPosition(humans[0]!, BELL.x, BELL.y + 30);
   assert.deepEqual(m.callEmergency(humans[0]!), { ok: false, error: 'COOLDOWN' });
   clock.advance(GAME.EMERGENCY_COOLDOWN_AFTER_MEETING_MS);
   assert.deepEqual(m.callEmergency(humans[0]!), { ok: true });
@@ -141,7 +142,7 @@ test('meeting → voting → eject cat → humans win', () => {
 test('tie vote ejects nobody and play resumes with teleport', () => {
   const { m, clock, out, cats, humans } = setup(5);
   clock.advance(GAME.EMERGENCY_COOLDOWN_AFTER_MEETING_MS);
-  m.debugSetPosition(humans[0]!, MAP.emergency.x, MAP.emergency.y + 30);
+  m.debugSetPosition(humans[0]!, BELL.x, BELL.y + 30);
   m.callEmergency(humans[0]!);
   clock.advance(TIMINGS.reportSplashMs + 1);
   const [a, b, c, d] = humans as [string, string, string, string];

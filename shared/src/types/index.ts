@@ -57,6 +57,7 @@ export interface PublicRoomSummary {
   status: 'open' | 'full' | 'playing';
   voiceChat: boolean;
   mapId: RoomSettings['mapId'];
+  mode: RoomSettings['mode'];
 }
 
 export interface PublicRoomList {
@@ -130,6 +131,18 @@ export interface VoteResult {
   catsRemaining: number | null;
 }
 
+/** Mode-specific shared state (objectives, clocks). */
+export interface ModeStateView {
+  /** Humans win by surviving: server time the clock runs out (while it is running). */
+  survivalEndsAt: number | null;
+  /** Remaining survival time (also meaningful while the clock is paused by a meeting). */
+  survivalRemainingMs: number | null;
+  /** Antidote objectives; null when the mode does not use them. */
+  antidote: { collectedIds: string[]; total: number } | null;
+  /** Whether the map's cameras and drones are working (false during CCTV sabotage). */
+  camerasOnline: boolean;
+}
+
 export interface GameStateView {
   phase: Phase;
   phaseEndsAt: number | null;
@@ -141,6 +154,7 @@ export interface GameStateView {
   taskProgress: { done: number; total: number } | null;
   sabotage: SabotageView | null;
   lockedDoorIds: string[];
+  modeState: ModeStateView;
   meeting: MeetingView | null;
   voteResult: VoteResult | null;
   startedAt: number | null;
@@ -163,6 +177,10 @@ export interface SelfState {
   emergencyLeft: number;
   emergencyReadyAt: number;
   visionRadius: number;
+  /** Set while this player is turning after an infection (Infection mode). Only ever sent to them. */
+  infectedUntil: number | null;
+  /** The player is at a security console with the camera feed open. */
+  watchingCameras: boolean;
   /** Server-authoritative position, used for spawn / meeting teleports / corrections. */
   x: number;
   y: number;
@@ -181,6 +199,16 @@ export interface PositionSnapshot {
   b: [string, string, number, number][];
 }
 
+/**
+ * Security-console camera feed: living players and bodies inside the view of a
+ * working camera or drone. p: [id, x, y]; b: [bodyId, victimId, x, y].
+ */
+export interface CameraFeed {
+  t: number;
+  p: [string, number, number][];
+  b: [string, string, number, number][];
+}
+
 export interface ChatMessage {
   id: string;
   senderId: string;
@@ -195,6 +223,8 @@ export interface ChatMessage {
 export interface PlayerMatchStats {
   tasksDone: number;
   kills: number;
+  infections: number;
+  objectives: number;
   sabotages: number;
   reports: number;
   meetingsCalled: number;
@@ -208,11 +238,22 @@ export interface EndPlayerView {
   name: string;
   appearance: Appearance;
   role: Role;
+  /** Started as a Human and was converted to a Cat (Infection mode). */
+  infected: boolean;
   status: 'alive' | 'dead' | 'ejected' | 'left';
   stats: PlayerMatchStats;
 }
 
-export type WinReason = 'cats_eliminated' | 'tasks_completed' | 'parity' | 'critical_sabotage' | 'humans_left';
+export type WinReason =
+  | 'cats_eliminated'
+  | 'tasks_completed'
+  | 'parity'
+  | 'critical_sabotage'
+  | 'humans_left'
+  | 'survived'
+  | 'escaped'
+  | 'antidote'
+  | 'all_infected';
 
 export interface GameEndView {
   matchId: string;
@@ -220,7 +261,7 @@ export interface GameEndView {
   reason: WinReason;
   durationMs: number;
   players: EndPlayerView[];
-  totals: { tasksDone: number; tasksTotal: number; kills: number; sabotages: number; meetings: number };
+  totals: { tasksDone: number; tasksTotal: number; kills: number; infections: number; sabotages: number; meetings: number };
   /** Rewards for the receiving player only. */
   you: { id: string; won: boolean; xp: number; coins: number; role: Role };
 }

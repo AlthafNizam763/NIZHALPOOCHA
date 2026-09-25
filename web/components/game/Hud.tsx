@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { TASK_DEFS, getMap, type TaskAssignment } from '@nizhal/shared';
+import { TASK_DEFS, getMap, getMode, type TaskAssignment } from '@nizhal/shared';
 import { useGame, EMPTY_PLAYERS, EMPTY_TASKS } from '@/state/gameStore';
 import { useConnection, serverNow } from '@/state/connectionStore';
 import { useUi } from '@/state/uiStore';
@@ -24,7 +24,7 @@ export function TaskPanel() {
   const isCat = useGame((s) => s.self?.role === 'CAT');
   // Compact by default on short (phone landscape) screens; tap to expand.
   const [open, setOpen] = useState(() => typeof window === 'undefined' || window.innerHeight > 520);
-  const map = getMap(useGame.getState().state?.mapId ?? 'kadalimukku_night');
+  const map = getMap(useGame.getState().state?.mapId ?? 'kadalimukku_old_town');
   const zoneName = (task: TaskAssignment) => {
     const st = map.taskStations.find((s) => s.id === task.stationId);
     return st ? t(`zone.${st.zoneId}` as I18nKey) : '';
@@ -82,7 +82,32 @@ export function TopCenter() {
         <div className="rounded-lg bg-ink/70 px-3 py-1 font-display text-lg tabular-nums text-paper">{state.startedAt ? mmss(serverNow() - state.startedAt) : '0:00'}</div>
       )}
       {sab && !sab.critical && <div className="rounded-md bg-laterite/80 px-2 py-0.5 text-xs">{t(`sabotage.${sab.type}`)}</div>}
+      <ModeStatus />
       <div className="rounded-md bg-ink/60 px-2 py-0.5 text-xs text-mist">{t(`zone.${zoneId}` as I18nKey)}</div>
+    </div>
+  );
+}
+
+/** Mode objectives: survival clock, antidote progress, camera network state. */
+function ModeStatus() {
+  const t = useT();
+  const ms = useGame((s) => s.state?.modeState);
+  const hasCameras = useGame((s) => (s.state ? getMap(s.state.mapId).cameras.length > 0 : false));
+  if (!ms) return null;
+  const survival = ms.survivalEndsAt !== null ? ms.survivalEndsAt - serverNow() : ms.survivalRemainingMs;
+  return (
+    <div className="flex flex-wrap justify-center gap-1 text-xs">
+      {survival !== null && (
+        <span className="rounded-md bg-canal/80 px-2 py-0.5 tabular-nums">
+          {t('hud.survive')} {mmss(survival)}
+        </span>
+      )}
+      {ms.antidote && (
+        <span className="rounded-md bg-moss/80 px-2 py-0.5 tabular-nums">
+          {t('objective.antidote')} {ms.antidote.collectedIds.length}/{ms.antidote.total}
+        </span>
+      )}
+      {hasCameras && !ms.camerasOnline && <span className="rounded-md bg-laterite/80 px-2 py-0.5">{t('hud.camerasOffline')}</span>}
     </div>
   );
 }
@@ -160,6 +185,7 @@ export function ActionButtons() {
 
   const isCat = self?.role === 'CAT';
   const alive = self?.alive ?? false;
+  const infects = useGame((s) => getMode(s.state?.settings.mode ?? 'classic').catAttack === 'infect');
   const now = serverNow();
   const killCd = self?.killReadyAt ? Math.ceil((self.killReadyAt - now) / 1000) : 0;
   const sabCd = self?.sabotageReadyAt ? Math.ceil((self.sabotageReadyAt - now) / 1000) : 0;
@@ -193,6 +219,20 @@ export function ActionButtons() {
   const doReport = async () => acts.bodyId && fail(await net.report(acts.bodyId));
   const doEmergency = async () => fail(await net.emergency());
   const doKill = async () => acts.killTargetId && fail(await net.kill(acts.killTargetId));
+  const doObjective = async () => {
+    const id = acts.objectiveId;
+    if (!id) return;
+    audio.play('interact');
+    const r = await net.objectiveStart(id);
+    if (r.ok) useGame.getState().set({ panel: { kind: 'objective', objectiveId: id } });
+    else fail(r);
+  };
+  const doCameras = async () => {
+    audio.play('interact');
+    const r = await net.watchCameras(true);
+    if (r.ok) useGame.getState().set({ panel: { kind: 'cameras' } });
+    else fail(r);
+  };
   const doSabotage = () => useGame.getState().set({ panel: panel?.kind === 'sabotage' ? null : { kind: 'sabotage' } });
 
   // Keyboard shortcuts (desktop)
@@ -213,7 +253,9 @@ export function ActionButtons() {
       if (gs.state?.phase !== 'PLAYING' || !gs.self?.alive || (gs.panel && gs.panel.kind !== 'map')) return;
       if (k === 'e') {
         if (gs.actions.repairStationId) void doRepair();
+        else if (gs.actions.objectiveId) void doObjective();
         else if (gs.actions.taskId) void doTask();
+        else if (gs.actions.console) void doCameras();
         else if (gs.actions.emergency) void doEmergency();
       } else if (k === 'r' && gs.actions.bodyId) void doReport();
       else if (k === 'f' && gs.self.role === 'CAT' && gs.actions.killTargetId) void doKill();
@@ -223,18 +265,20 @@ export function ActionButtons() {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  if (phase !== 'PLAYING' || !alive) return null;
+  if (phase !== 'PLAYING' || !alive || self?.infectedUntil) return null;
 
   return (
     <div className="pointer-events-auto flex flex-wrap-reverse items-end justify-end gap-2 sm:gap-3">
       {acts.emergency && <ActionButton label={t('action.emergency')} hotkey="E" tone="neutral" cooldown={emCd > 0 ? emCd : 0} onClick={() => void doEmergency()} />}
       {acts.repairStationId && <ActionButton label={t('action.repair')} hotkey="E" tone="task" tut="action-repair" onClick={() => void doRepair()} />}
+      {acts.console && <ActionButton label={t('action.cameras')} hotkey="E" tone="neutral" onClick={() => void doCameras()} />}
+      {acts.objectiveId && <ActionButton label={t('action.collect')} hotkey="E" tone="task" onClick={() => void doObjective()} />}
       {acts.taskId && <ActionButton label={t('action.task')} hotkey="E" tone="task" tut="action-task" onClick={() => void doTask()} />}
       {acts.bodyId && <ActionButton label={t('action.report')} hotkey="R" tone="report" big tut="action-report" onClick={() => void doReport()} />}
       {isCat && <ActionButton label={t('action.sabotage')} hotkey="Q" tone="neutral" cooldown={sabCd > 0 ? sabCd : 0} onClick={doSabotage} />}
       {isCat && (acts.killTargetId || !touch) && (
         <ActionButton
-          label={t('action.kill')}
+          label={t(infects ? 'action.infect' : 'action.kill')}
           hotkey="F"
           tone="danger"
           big

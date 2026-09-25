@@ -1,6 +1,7 @@
 'use client';
 import { create } from 'zustand';
 import type {
+  CameraFeed,
   ChatMessage,
   GameEndView,
   GameStateView,
@@ -17,6 +18,10 @@ export interface ProximityActions {
   bodyId: string | null;
   emergency: boolean;
   killTargetId: string | null;
+  /** Antidote part in reach (Infection). */
+  objectiveId: string | null;
+  /** Standing at a security console. */
+  console: boolean;
 }
 
 export const NO_ACTIONS: ProximityActions = {
@@ -25,12 +30,16 @@ export const NO_ACTIONS: ProximityActions = {
   bodyId: null,
   emergency: false,
   killTargetId: null,
+  objectiveId: null,
+  console: false,
 };
 
 export type ActivePanel =
   | { kind: 'task'; taskId: string; minigame: MinigameKind }
   | { kind: 'fakeTask'; taskId: string }
   | { kind: 'repair'; stationId: string }
+  | { kind: 'objective'; objectiveId: string }
+  | { kind: 'cameras' }
   | { kind: 'sabotage' }
   | { kind: 'map' }
   | { kind: 'menu' }
@@ -50,6 +59,8 @@ interface GameState {
   followId: string | null;
   /** Victim ids the local Cat knows about (from private kill events). */
   knownKills: string[];
+  /** Latest security-console feed (only while watching). */
+  cameraFeed: CameraFeed | null;
   set: (patch: Partial<Omit<GameState, 'set' | 'reset'>>) => void;
   reset: () => void;
 }
@@ -66,6 +77,7 @@ const initial = {
   zoneId: 'junction',
   followId: null,
   knownKills: [],
+  cameraFeed: null,
 };
 
 export const useGame = create<GameState>()((set) => ({
@@ -80,7 +92,9 @@ export function sameActions(a: ProximityActions, b: ProximityActions): boolean {
     a.repairStationId === b.repairStationId &&
     a.bodyId === b.bodyId &&
     a.emergency === b.emergency &&
-    a.killTargetId === b.killTargetId
+    a.killTargetId === b.killTargetId &&
+    a.objectiveId === b.objectiveId &&
+    a.console === b.console
   );
 }
 

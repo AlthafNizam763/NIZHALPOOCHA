@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { SABOTAGE_DEFS, TASK_DEFS, type MinigameKind } from '@nizhal/shared';
+import { GAME, SABOTAGE_DEFS, TASK_DEFS, type MinigameKind } from '@nizhal/shared';
 import { useGame } from '@/state/gameStore';
 import { useUi } from '@/state/uiStore';
 import { useT } from '@/hooks/useT';
@@ -36,7 +36,7 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-/** Hosts task mini-games, sabotage repairs and the Cat's "pretend" task. */
+/** Hosts task mini-games, sabotage repairs, objective pickups and the Cat's "pretend" task. */
 export function TaskModal() {
   const t = useT();
   const panel = useGame((s) => s.panel);
@@ -77,7 +77,32 @@ export function TaskModal() {
     [toast],
   );
 
+  const finishObjective = useCallback(
+    async (objectiveId: string) => {
+      for (let i = 0; i < 6; i++) {
+        const r = await net.objectiveCollect(objectiveId);
+        if (r.ok) break;
+        if (r.error !== 'TOO_FAST') {
+          toast(errorKey(r.error), undefined, 'warn');
+          break;
+        }
+        await sleep(400);
+      }
+      useGame.getState().set({ panel: null });
+    },
+    [toast],
+  );
+
   if (!panel) return null;
+
+  if (panel.kind === 'objective') {
+    return (
+      <Shell title={t('objective.antidotePart')}>
+        <p className="mb-3 text-center text-sm text-mist">{t('objective.collecting')}</p>
+        <HoldRepair ms={GAME.OBJECTIVE_MIN_MS + 300} onDone={() => void finishObjective(panel.objectiveId)} />
+      </Shell>
+    );
+  }
 
   if (panel.kind === 'task') {
     const task = tasks?.find((x) => x.id === panel.taskId);

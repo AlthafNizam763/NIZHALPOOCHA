@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 /** Host-configurable match settings. Bounds are enforced on the server. */
 export const SETTINGS_BOUNDS = {
-  catCount: { min: 1, max: 3 },
+  /** Absolute bounds; the legal range for a match also depends on player count and mode. */
+  catCount: { min: 1, max: 7 },
   killCooldownS: { min: 10, max: 60 },
   discussionS: { min: 0, max: 120 },
   votingS: { min: 15, max: 180 },
@@ -11,10 +12,10 @@ export const SETTINGS_BOUNDS = {
   maxPlayers: { min: 5, max: 15 },
 } as const;
 
-export const MAP_IDS = ['kadalimukku_night'] as const;
+export const MAP_IDS = ['kadalimukku_old_town', 'kadalimukku_new_town', 'backwater_village', 'neo_kerala', 'nizhalam'] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
-export const GAME_MODES = ['classic'] as const;
+export const GAME_MODES = ['classic', 'hunt', 'infection', 'future'] as const;
 export type GameMode = (typeof GAME_MODES)[number];
 
 export const roomSettingsSchema = z.object({
@@ -40,7 +41,7 @@ export const roomSettingsSchema = z.object({
 export type RoomSettings = z.infer<typeof roomSettingsSchema>;
 
 export const DEFAULT_SETTINGS: RoomSettings = {
-  mapId: 'kadalimukku_night',
+  mapId: 'kadalimukku_old_town',
   mode: 'classic',
   maxPlayers: 10,
   catCount: 1,

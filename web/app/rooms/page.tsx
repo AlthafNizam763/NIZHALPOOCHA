@@ -24,7 +24,8 @@ function RoomCard({ room, onJoin, joining }: { room: PublicRoomSummary; onJoin: 
         <div className="truncate font-semibold">{t('rooms.hostRoom', { name: room.hostName })}</div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-rain">
           <span className={statusStyle}>{t(`rooms.status.${room.status}`)}</span>
-          <span>{t('map.kadalimukku_night')}</span>
+          <span>{t(`map.${room.mapId}`)}</span>
+          <span>{t(`mode.${room.mode}`)}</span>
           {room.voiceChat && <span>{t('rooms.voice')}</span>}
         </div>
         <div className="mt-2 flex items-center gap-2">

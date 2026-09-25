@@ -1,5 +1,6 @@
 import {
   DEFAULT_SETTINGS,
+  applySettingsPatch,
   roomSettingsSchema,
   type Appearance,
   type ErrorCode,
@@ -46,8 +47,9 @@ export class RoomManager {
 
   create(playerId: string, name: string, appearance: Appearance, patch: PartialRoomSettings = {}): RoomResult {
     if (this.playerRoom.has(playerId)) return { ok: false, error: 'ALREADY_IN_ROOM' };
-    const parsed = roomSettingsSchema.safeParse({ ...DEFAULT_SETTINGS, ...patch });
-    if (!parsed.success) return { ok: false, error: 'INVALID_CONFIG' };
+    const merged = applySettingsPatch(DEFAULT_SETTINGS, patch);
+    const parsed = merged ? roomSettingsSchema.safeParse(merged) : null;
+    if (!parsed?.success) return { ok: false, error: 'INVALID_CONFIG' };
 
     let code = roomCode();
     while (this.rooms.has(code)) code = roomCode();

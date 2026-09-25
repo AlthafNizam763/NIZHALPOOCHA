@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { DEFAULT_SETTINGS, type ErrorCode, type RoomSettings } from '@nizhal/shared';
+import { DEFAULT_SETTINGS, applySettingsPatch, type ErrorCode, type RoomSettings } from '@nizhal/shared';
 import { useAuth } from '@/state/authStore';
 import { useT } from '@/hooks/useT';
 import { useRequireAuth, useRoomRedirect } from '@/hooks/useRoute';
@@ -65,11 +65,7 @@ function CreateRoom() {
         <div className="space-y-4">
           <VisibilityChoice isPublic={settings.isPublic} onChange={(isPublic) => setSettings({ ...settings, isPublic })} />
           <Panel className="px-4 py-2">
-            <div className="flex min-h-11 items-center justify-between border-b border-line text-sm">
-              <span className="text-mist">{t('settings.room.map')}</span>
-              <span>{t('map.kadalimukku_night')}</span>
-            </div>
-            <SettingsForm value={settings} onChange={(p) => setSettings({ ...settings, ...p })} playerCount={settings.maxPlayers} />
+            <SettingsForm value={settings} onChange={(p) => setSettings(applySettingsPatch(settings, p) ?? settings)} playerCount={settings.maxPlayers} />
           </Panel>
           <Button full size="lg" loading={busy} onClick={() => void create()}>
             {settings.isPublic ? t('create.submitPublic') : t('create.submit')}

@@ -3,23 +3,30 @@ import {
   GAME,
   SABOTAGE_DEFS,
   boxOverlapsRect,
+  cameraPosition,
   dist,
   getMap,
+  getMode,
   moveWithCollision,
+  repairStationsFor,
+  speedMultiplierAt,
   zoneAt,
   type Appearance,
   type GameMapDef,
+  type GameModeDefinition,
+  type MapPalette,
   type PositionSnapshot,
   type Rect,
 } from '@nizhal/shared';
 import { useGame, sameActions, NO_ACTIONS, type ProximityActions } from '@/state/gameStore';
 import { useSettings } from '@/state/settingsStore';
+import { serverNow } from '@/state/connectionStore';
 import { sendMove } from '@/services/net';
 import { audio } from '@/services/audio';
 import { SIGNS } from '@/utils/i18n/ml';
 import { bridge } from '../bridge';
 import { appearanceKey, drawCharacter, CHAR_FRAMES, CHAR_H, CHAR_W } from '../art/character';
-import { drawStatic, makeCanopyTextures, makeTextures, PALETTE } from '../art/mapArt';
+import { drawStatic, makeCanopyTextures, makeTextures, paletteFor } from '../art/mapArt';
 
 const TEX_SCALE = 2;
 const SPRITE_SCALE = 1 / TEX_SCALE;
@@ -58,6 +65,9 @@ interface Actor {
 
 export class WorldScene extends Phaser.Scene {
   private map!: GameMapDef;
+  private mode!: GameModeDefinition;
+  private palette!: MapPalette;
+  private drones!: Phaser.GameObjects.Graphics;
   private me: Actor | null = null;
   private remotes = new Map<string, Actor>();
   private bodies = new Map<string, { img: Phaser.GameObjects.Image; victimId: string; x: number; y: number }>();
@@ -95,9 +105,11 @@ export class WorldScene extends Phaser.Scene {
 
   create(): void {
     const gs = useGame.getState();
-    this.map = getMap(gs.state?.mapId ?? 'kadalimukku_night');
-    makeTextures(this);
-    this.cameras.main.setBounds(0, 0, this.map.width, this.map.height).setBackgroundColor('#0e1512').setRoundPixels(false);
+    this.map = getMap(gs.state?.mapId ?? 'kadalimukku_old_town');
+    this.mode = getMode(gs.state?.settings.mode ?? 'classic');
+    this.palette = paletteFor(this.map);
+    makeTextures(this, this.map);
+    this.cameras.main.setBounds(0, 0, this.map.width, this.map.height).setBackgroundColor(this.map.theme.background).setRoundPixels(false);
 
     this.water = drawStatic(this, this.map).water;
     this.buildSigns();
@@ -107,6 +119,8 @@ export class WorldScene extends Phaser.Scene {
     this.lockedDoors = this.add.graphics().setDepth(6);
     this.markers = this.add.graphics().setDepth(DEPTH.markers);
     this.killRing = this.add.graphics().setDepth(DEPTH.bodies - 1);
+    // Drones carry their own lights, so they show above the darkness.
+    this.drones = this.add.graphics().setDepth(DEPTH.markers);
 
     const tut = bridge.tutorial;
     if (tut) {
@@ -142,11 +156,12 @@ export class WorldScene extends Phaser.Scene {
         if (s.state?.lockedDoorIds !== prev.state?.lockedDoorIds) this.drawLockedDoors();
         if (s.state?.sabotage?.type !== prev.state?.sabotage?.type) this.updateLamps();
         if (s.state?.players !== prev.state?.players) this.syncAppearances();
+        if (s.role !== prev.role) this.syncLabels();
       }),
     );
     this.drawLockedDoors();
     this.updateLamps();
-    this.nextLightning = this.time.now + Phaser.Math.Between(12000, 30000);
+    this.nextLightning = this.map.theme.lightning ? this.time.now + Phaser.Math.Between(12000, 30000) : Infinity;
 
     audio.startAmbience();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
@@ -192,6 +207,7 @@ export class WorldScene extends Phaser.Scene {
         .setAlpha(0.4)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(DEPTH.darkness + 1);
+      if (this.map.theme.palette.lamp !== undefined) glow.setTint(this.palette.lamp);
       this.lampGlows.push(glow);
     }
   }
@@ -218,7 +234,7 @@ export class WorldScene extends Phaser.Scene {
 
   private buildWeather(): void {
     const s = useSettings.getState();
-    if (!s.rain) return;
+    if (!s.rain || !this.map.theme.rain) return;
     const low = s.quality === 'low';
     this.rainZone.width = this.scale.width + 200;
     this.rain = this.add
@@ -316,6 +332,11 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private syncLabels(): void {
+    const fellow = new Set(useGame.getState().role?.fellowCats.map((c) => c.id));
+    for (const a of this.remotes.values()) a.label.setColor(fellow.has(a.id) ? '#e9b04f' : '#e8e1cf');
+  }
+
   private ensureMe(): Actor | null {
     if (this.me) return this.me;
     const { self } = useGame.getState();
@@ -395,7 +416,7 @@ export class WorldScene extends Phaser.Scene {
 
     const phase = gs.state?.phase;
     const alive = gs.self?.alive ?? true;
-    const frozen = phase !== 'PLAYING' || (gs.panel !== null && gs.panel.kind !== 'map');
+    const frozen = phase !== 'PLAYING' || (gs.panel !== null && gs.panel.kind !== 'map') || !!gs.self?.infectedUntil;
 
     if (me) {
       this.moveLocal(me, dt, frozen, alive, now);
@@ -412,6 +433,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateWeather(time);
     this.updateCanopies();
     this.drawMarkers(time);
+    this.drawDrones(time);
 
     if (me && time - this.lastProximity > 100) {
       this.lastProximity = time;
@@ -453,8 +475,9 @@ export class WorldScene extends Phaser.Scene {
     }
     const moving = Math.hypot(vx, vy) > 0.08;
     if (moving) {
-      const dx = vx * GAME.PLAYER_SPEED * dt;
-      const dy = vy * GAME.PLAYER_SPEED * dt;
+      const speed = GAME.PLAYER_SPEED * (alive ? speedMultiplierAt(this.map, me.x, me.y) : 1);
+      const dx = vx * speed * dt;
+      const dy = vy * speed * dt;
       if (alive) {
         const next = moveWithCollision(me.x, me.y, dx, dy, GAME.PLAYER_HALF, this.collidersFor(me.x, me.y), this.map.width, this.map.height);
         me.x = next.x;
@@ -625,29 +648,62 @@ export class WorldScene extends Phaser.Scene {
         if (t.done) continue;
         const st = this.map.taskStations.find((s) => s.id === t.stationId);
         if (!st) continue;
-        g.fillStyle(PALETTE.lamp, pulse).fillTriangle(st.x - 7, st.y - 30, st.x + 7, st.y - 30, st.x, st.y - 20);
-        g.lineStyle(2, PALETTE.lamp, pulse * 0.8).strokeCircle(st.x, st.y, 16);
+        g.fillStyle(this.palette.lamp, pulse).fillTriangle(st.x - 7, st.y - 30, st.x + 7, st.y - 30, st.x, st.y - 20);
+        g.lineStyle(2, this.palette.lamp, pulse * 0.8).strokeCircle(st.x, st.y, 16);
       }
     }
     const sab = state.sabotage;
     if (sab) {
-      for (const id of SABOTAGE_DEFS[sab.type].repairStationIds) {
-        if (sab.repairedStationIds.includes(id)) continue;
-        const st = this.map.sabotageStations.find((s) => s.id === id);
-        if (!st) continue;
+      for (const st of repairStationsFor(this.map, sab.type)) {
+        if (sab.repairedStationIds.includes(st.id)) continue;
         g.lineStyle(3, 0xd0553d, pulse).strokeCircle(st.x, st.y, 20 + pulse * 6);
         g.fillStyle(0xd0553d, pulse).fillCircle(st.x, st.y - 28, 5);
       }
     }
-    // Alarm bell ring
-    const e = this.map.emergency;
-    g.lineStyle(2, 0xc99a3b, 0.35 + pulse * 0.2).strokeCircle(e.x, e.y, 26);
+    // Alarm bells / sirens
+    if (this.mode.emergencyMeetings) for (const e of this.map.meetingLocations) g.lineStyle(2, 0xc99a3b, 0.35 + pulse * 0.2).strokeCircle(e.x, e.y, 26);
+    // Antidote parts still to be found (everyone sees them — Cats can guard them).
+    const antidote = state.modeState.antidote;
+    if (antidote) {
+      for (const o of this.map.objectives) {
+        if (antidote.collectedIds.includes(o.id)) continue;
+        g.lineStyle(2, 0x6fdc8c, 0.45 + pulse * 0.4).strokeCircle(o.x, o.y, 14 + pulse * 4);
+        g.fillStyle(0x6fdc8c, 0.6 + pulse * 0.3).fillRect(o.x - 2, o.y - 9, 4, 18).fillRect(o.x - 9, o.y - 2, 18, 4);
+      }
+    }
+    for (const c of this.map.securityConsoles) g.lineStyle(2, 0x55d6e6, 0.3 + pulse * 0.25).strokeCircle(c.x, c.y, 20);
     this.drawTutorial(g, time, pulse);
 
     this.killRing.clear();
     if (actions.killTargetId) {
       const target = this.remotes.get(actions.killTargetId);
       if (target) this.killRing.lineStyle(2, 0xb5573a, 0.9).strokeEllipse(target.x, target.y, 40, 16);
+    }
+  }
+
+  /** Patrol drones: positions are a pure function of server time, so no network traffic is needed. */
+  private drawDrones(time: number): void {
+    const g = this.drones;
+    g.clear();
+    const online = useGame.getState().state?.modeState.camerasOnline ?? true;
+    const t = serverNow();
+    for (const cam of this.map.cameras) {
+      if (cam.kind !== 'drone') continue;
+      const p = cameraPosition(cam, t);
+      if (online) {
+        g.fillStyle(0x9fe8ff, 0.05).fillCircle(p.x, p.y, cam.radius);
+        g.lineStyle(1, 0x9fe8ff, 0.18).strokeCircle(p.x, p.y, cam.radius);
+      }
+      // Body, arms and spinning rotors
+      g.fillStyle(0x000000, 0.35).fillEllipse(p.x + 10, p.y + 26, 26, 10);
+      g.lineStyle(3, 0x2a3035, 1).lineBetween(p.x - 11, p.y - 11, p.x + 11, p.y + 11).lineBetween(p.x - 11, p.y + 11, p.x + 11, p.y - 11);
+      const spin = (time / 40) % (Math.PI * 2);
+      for (const [ox, oy] of [[-11, -11], [11, -11], [-11, 11], [11, 11]] as const) {
+        g.lineStyle(1.5, 0xc9d8e0, 0.7).lineBetween(p.x + ox - Math.cos(spin) * 7, p.y + oy - Math.sin(spin) * 7, p.x + ox + Math.cos(spin) * 7, p.y + oy + Math.sin(spin) * 7);
+      }
+      g.fillStyle(0x3d4449, 1).fillCircle(p.x, p.y, 6);
+      const blink = Math.sin(time / 180) > 0;
+      g.fillStyle(online ? (blink ? 0x55d6e6 : 0x2d8aa0) : 0xb5573a, 1).fillCircle(p.x, p.y, 2.5);
     }
   }
 
@@ -698,7 +754,7 @@ export class WorldScene extends Phaser.Scene {
     }
     const target = tut.guide;
     if (!target || !this.me) return;
-    g.lineStyle(3, PALETTE.lamp, 0.5 + pulse * 0.4).strokeCircle(target.x, target.y, 22 + pulse * 8);
+    g.lineStyle(3, this.palette.lamp, 0.5 + pulse * 0.4).strokeCircle(target.x, target.y, 22 + pulse * 8);
     // Chevron orbiting the player, pointing at the objective.
     const ox = this.me.x;
     const oy = this.me.y - 20;
@@ -711,14 +767,14 @@ export class WorldScene extends Phaser.Scene {
     const r = 62 + Math.sin(time / 180) * 6;
     const cx = ox + ux * r;
     const cy = oy + uy * r;
-    g.fillStyle(PALETTE.lamp, 0.95).fillTriangle(cx + ux * 14, cy + uy * 14, cx - ux * 8 - uy * 10, cy - uy * 8 + ux * 10, cx - ux * 8 + uy * 10, cy - uy * 8 - ux * 10);
+    g.fillStyle(this.palette.lamp, 0.95).fillTriangle(cx + ux * 14, cy + uy * 14, cx - ux * 8 - uy * 10, cy - uy * 8 + ux * 10, cx - ux * 8 + uy * 10, cy - uy * 8 - ux * 10);
   }
 
   private computeProximity(me: Actor, alive: boolean, playing: boolean): void {
     const gs = useGame.getState();
     const self = gs.self;
     const next: ProximityActions = { ...NO_ACTIONS };
-    if (playing && alive && self) {
+    if (playing && alive && self && !self.infectedUntil) {
       let best: number = GAME.INTERACT_RANGE;
       for (const t of self.tasks) {
         if (t.done) continue;
@@ -732,10 +788,9 @@ export class WorldScene extends Phaser.Scene {
       }
       const sab = gs.state?.sabotage;
       if (sab) {
-        for (const id of SABOTAGE_DEFS[sab.type].repairStationIds) {
-          if (sab.repairedStationIds.includes(id)) continue;
-          const st = this.map.sabotageStations.find((s) => s.id === id);
-          if (st && dist(me.x, me.y, st.x, st.y) <= GAME.INTERACT_RANGE) next.repairStationId = id;
+        for (const st of repairStationsFor(this.map, sab.type)) {
+          if (sab.repairedStationIds.includes(st.id)) continue;
+          if (dist(me.x, me.y, st.x, st.y) <= GAME.INTERACT_RANGE) next.repairStationId = st.id;
         }
       }
       let bodyBest: number = GAME.REPORT_RANGE;
@@ -748,7 +803,17 @@ export class WorldScene extends Phaser.Scene {
       }
       const critical = sab ? SABOTAGE_DEFS[sab.type].critical : false;
       next.emergency =
-        self.emergencyLeft > 0 && !critical && dist(me.x, me.y, this.map.emergency.x, this.map.emergency.y) <= GAME.EMERGENCY_RANGE;
+        this.mode.emergencyMeetings &&
+        self.emergencyLeft > 0 &&
+        !critical &&
+        this.map.meetingLocations.some((e) => dist(me.x, me.y, e.x, e.y) <= GAME.EMERGENCY_RANGE);
+      const antidote = gs.state?.modeState.antidote;
+      if (antidote && self.role === 'HUMAN') {
+        for (const o of this.map.objectives) {
+          if (!antidote.collectedIds.includes(o.id) && dist(me.x, me.y, o.x, o.y) <= GAME.INTERACT_RANGE) next.objectiveId = o.id;
+        }
+      }
+      next.console = this.map.securityConsoles.some((c) => dist(me.x, me.y, c.x, c.y) <= GAME.INTERACT_RANGE);
 
       if (self.role === 'CAT') {
         const fellow = new Set(gs.role?.fellowCats.map((c) => c.id));

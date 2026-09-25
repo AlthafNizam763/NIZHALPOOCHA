@@ -8,5 +8,6 @@ export * from './game-rules/sabotage';
 export * from './game-rules/progression';
 export * from './game-rules/voice';
 export * from './maps';
+export * from './game-modes';
 export * from './types';
 export * from './events';

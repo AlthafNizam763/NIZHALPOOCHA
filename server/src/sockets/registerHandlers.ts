@@ -133,6 +133,9 @@ export function registerHandlers(io: IO, rooms: RoomManager): void {
     on(C2S.CAT_SABOTAGE, schemas.sabotage, (p) => inMatch()?.startSabotage(uid, p.type, p.targetBuildingId) ?? noMatch);
     on(C2S.SABOTAGE_REPAIR_START, schemas.repair, (p) => inMatch()?.startRepair(uid, p.stationId) ?? noMatch);
     on(C2S.SABOTAGE_REPAIR, schemas.repair, (p) => inMatch()?.completeRepair(uid, p.stationId) ?? noMatch);
+    on(C2S.OBJECTIVE_START, schemas.objective, (p) => inMatch()?.startObjective(uid, p.objectiveId) ?? noMatch);
+    on(C2S.OBJECTIVE_COLLECT, schemas.objective, (p) => inMatch()?.completeObjective(uid, p.objectiveId) ?? noMatch);
+    on(C2S.CAMERAS_WATCH, schemas.camerasWatch, (p) => inMatch()?.setWatchingCameras(uid, p.watching) ?? noMatch);
     on(C2S.MEETING_START, null, () => inMatch()?.callEmergency(uid) ?? noMatch);
     on(C2S.MEETING_CHAT, schemas.chat, (p) => inMatch()?.sendChat(uid, p) ?? noMatch);
     on(C2S.VOTE_CAST, schemas.vote, (p) => inMatch()?.castVote(uid, p.targetId) ?? noMatch);

@@ -4,23 +4,32 @@ import {
   S2C,
   SABOTAGE_DEFS,
   TASK_DEFS,
+  availableSabotages,
+  camerasSeeing,
+  cameraPosition,
   canTransition,
   dist,
-  effectiveCatCount,
+  effectiveCatCountFor,
   getMap,
+  getMode,
   isBlocked,
   boxOverlapsRect,
   matchRewards,
+  repairStationsFor,
   segmentBlocked,
   spawnPoints,
+  speedMultiplierAt,
   teamOf,
+  zoneAt,
   type Appearance,
+  type CameraFeed,
   type ChatMessage,
   type ChatPayload,
   type EndPlayerView,
   type ErrorCode,
   type GameEndView,
   type GameMapDef,
+  type GameModeDefinition,
   type GameStateView,
   type KnownStatus,
   type Phase,
@@ -38,6 +47,7 @@ import {
   type Team,
   type VoteResult,
   type WinReason,
+  type WinResult,
 } from '@nizhal/shared';
 import type { Clock, TimerHandle } from '../utils/clock';
 import { createLogger } from '../utils/logger';
@@ -45,7 +55,6 @@ import { secureShuffle, shortId, uid } from '../utils/random';
 import { assignTasks } from '../tasks/assignTasks';
 import { resolveVotes } from '../voting/resolveVotes';
 import { isQuickChatId, sanitizeChat } from '../meetings/chat';
-import { evaluateWin, type WinResult } from './winConditions';
 import type { Outbox } from './outbox';
 
 const log = createLogger('match');
@@ -112,6 +121,12 @@ interface MatchPlayer {
   appearance: Appearance;
   slot: number;
   role: Role;
+  /** Started the match as a Human (their finished tasks keep counting after conversion). */
+  wasHuman: boolean;
+  /** Converted from Human to Cat (Infection). */
+  infected: boolean;
+  /** Pending conversion: frozen until `turnsAt`, then becomes a Cat. */
+  infection: { turnsAt: number; timer: TimerHandle } | null;
   alive: boolean;
   status: 'alive' | 'dead' | 'ejected' | 'left';
   /** Whether the death is public knowledge (after a meeting / eject / leaving). */
@@ -128,6 +143,8 @@ interface MatchPlayer {
   tasks: TaskAssignment[];
   activeTask: { taskId: string; startedAt: number } | null;
   activeRepair: { stationId: string; startedAt: number } | null;
+  activeObjective: { objectiveId: string; startedAt: number } | null;
+  watchingCameras: boolean;
   killReadyAt: number;
   sabotageReadyAt: number;
   emergencyLeft: number;
@@ -167,6 +184,10 @@ interface Meeting {
   votes: Map<string, string | 'skip'>;
 }
 
+/**
+ * One running match. All gameplay rules come from the selected game mode
+ * (`GameModeDefinition`) and map (`GameMapDef`); this class only enforces them.
+ */
 export class Match {
   readonly id = uid('m_');
   phase: Phase = 'ROLE_REVEAL';
@@ -174,6 +195,7 @@ export class Match {
   private phaseTimer: TimerHandle | null = null;
   private tickTimer: TimerHandle | null = null;
   private readonly map: GameMapDef;
+  private readonly mode: GameModeDefinition;
   private readonly players = new Map<string, MatchPlayer>();
   private readonly bodies = new Map<string, Body>();
   private sabotage: MajorSabotage | null = null;
@@ -184,6 +206,13 @@ export class Match {
   private emergencyReadyAt = 0;
   private startedAt = 0;
   private meetingsHeld = 0;
+  private readonly antidoteCollected = new Set<string>();
+  private readonly antidoteTotal: number;
+  /** Survival clock: runs only during free roam. */
+  private survivalRemainingMs: number | null;
+  private survivalEndsAt: number | null = null;
+  private survivalTimer: TimerHandle | null = null;
+  private survivalExpired = false;
   private readonly timings: MatchTimings;
 
   constructor(
@@ -197,9 +226,12 @@ export class Match {
   ) {
     this.timings = { ...DEFAULT_TIMINGS, ...timings };
     this.map = getMap(settings.mapId);
+    this.mode = getMode(settings.mode);
+    this.survivalRemainingMs = this.mode.survivalMs;
+    this.antidoteTotal = this.mode.useAntidote ? this.map.objectives.filter((o) => o.kind === 'antidote_part').length : 0;
 
     // ── Role assignment: server-only, cryptographically shuffled ──
-    const catCount = effectiveCatCount(members.length, settings.catCount);
+    const catCount = effectiveCatCountFor(settings.mode, members.length, settings.catCount);
     const shuffled = secureShuffle(members.map((m) => m.id));
     const cats = new Set(shuffled.slice(0, catCount));
     const spawns = spawnPoints(this.map, members.length);
@@ -210,12 +242,16 @@ export class Match {
       .sort((a, b) => a.slot - b.slot)
       .forEach((m, i) => {
         const spawn = spawns[i] ?? this.map.spawn;
+        const isCat = cats.has(m.id);
         this.players.set(m.id, {
           id: m.id,
           name: m.name,
           appearance: m.appearance,
           slot: m.slot,
-          role: cats.has(m.id) ? 'CAT' : 'HUMAN',
+          role: isCat ? 'CAT' : 'HUMAN',
+          wasHuman: !isCat,
+          infected: false,
+          infection: null,
           alive: true,
           status: 'alive',
           deathRevealed: false,
@@ -231,9 +267,11 @@ export class Match {
           tasks: assignTasks(this.map, settings.tasksPerPlayer),
           activeTask: null,
           activeRepair: null,
+          activeObjective: null,
+          watchingCameras: false,
           killReadyAt: 0,
           sabotageReadyAt: 0,
-          emergencyLeft: settings.emergencyMeetings,
+          emergencyLeft: this.mode.emergencyMeetings ? settings.emergencyMeetings : 0,
           lastChatAt: 0,
           stats: { ...EMPTY_STATS },
           disconnectTimer: null,
@@ -258,15 +296,19 @@ export class Match {
     this.broadcastState();
     this.phaseTimer = this.clock.setTimeout(() => this.beginPlaying(true), this.timings.roleRevealMs);
     this.tickTimer = this.clock.setInterval(() => this.tick(), this.timings.tickMs);
-    log.info(`[${this.roomCode}] match ${this.id} started with ${this.players.size} players`);
+    log.info(`[${this.roomCode}] match ${this.id} started: ${this.players.size} players, ${this.map.id} / ${this.mode.id}`);
   }
 
   dispose(): void {
     this.phaseTimer?.cancel();
     this.tickTimer?.cancel();
+    this.survivalTimer?.cancel();
     this.sabotage?.timer?.cancel();
     this.doorLock?.timer.cancel();
-    for (const p of this.players.values()) p.disconnectTimer?.cancel();
+    for (const p of this.players.values()) {
+      p.disconnectTimer?.cancel();
+      p.infection?.timer.cancel();
+    }
   }
 
   private setPhase(to: Phase, endsAt: number | null): boolean {
@@ -277,6 +319,10 @@ export class Match {
     this.phase = to;
     this.phaseEndsAt = endsAt;
     return true;
+  }
+
+  private killCooldownMs(): number {
+    return Math.round(this.settings.killCooldownS * 1000 * this.mode.killCooldownMultiplier);
   }
 
   private beginPlaying(first: boolean): void {
@@ -296,16 +342,48 @@ export class Match {
       p.moveBudget = 0;
       p.lastMoveAt = now;
       p.teleportSeq++;
-      p.activeTask = null;
-      p.activeRepair = null;
+      this.clearInteractions(p);
       if (p.role === 'CAT') {
-        p.killReadyAt = now + (first ? GAME.FIRST_KILL_COOLDOWN_MS : this.settings.killCooldownS * 1000);
+        p.killReadyAt = now + (first ? GAME.FIRST_KILL_COOLDOWN_MS : this.killCooldownMs());
         p.sabotageReadyAt = now + GAME.FIRST_SABOTAGE_COOLDOWN_MS;
       }
     }
     this.emergencyReadyAt = now + GAME.EMERGENCY_COOLDOWN_AFTER_MEETING_MS;
+    this.resumeSurvivalClock(now);
     for (const p of this.players.values()) this.sendSelf(p);
     this.broadcastState();
+  }
+
+  private clearInteractions(p: MatchPlayer): void {
+    p.activeTask = null;
+    p.activeRepair = null;
+    p.activeObjective = null;
+    p.watchingCameras = false;
+  }
+
+  // ── Survival clock (Hunt / Infection) ─────────────────────────────────
+  private resumeSurvivalClock(now: number): void {
+    if (this.survivalRemainingMs === null || this.survivalExpired) return;
+    this.survivalTimer?.cancel();
+    this.survivalEndsAt = now + this.survivalRemainingMs;
+    this.survivalTimer = this.clock.setTimeout(() => this.survivalElapsed(), this.survivalRemainingMs);
+  }
+
+  private pauseSurvivalClock(now: number): void {
+    if (this.survivalEndsAt === null) return;
+    this.survivalTimer?.cancel();
+    this.survivalTimer = null;
+    this.survivalRemainingMs = Math.max(0, this.survivalEndsAt - now);
+    this.survivalEndsAt = null;
+  }
+
+  private survivalElapsed(): void {
+    if (this.phase !== 'PLAYING') return;
+    this.survivalTimer = null;
+    this.survivalEndsAt = null;
+    this.survivalRemainingMs = 0;
+    this.survivalExpired = true;
+    this.checkWin();
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -316,20 +394,26 @@ export class Match {
     if (this.phase !== 'PLAYING') return;
     const p = this.players.get(playerId);
     if (!p || p.status === 'left') return;
-    if (p.activeTask || p.activeRepair) {
+    if (p.infection) {
+      // Turning players are frozen in place.
+      p.moving = false;
+      return;
+    }
+    const station = this.interactionPosFor(p);
+    if (station && dist(m.x, m.y, station.x, station.y) > GAME.INTERACT_RANGE * 1.6) {
       // Moving away cancels the in-progress interaction.
-      const station = this.stationPosFor(p);
-      if (station && dist(m.x, m.y, station.x, station.y) > GAME.INTERACT_RANGE * 1.6) {
-        p.activeTask = null;
-        p.activeRepair = null;
-      }
+      const wasWatching = p.watchingCameras;
+      this.clearInteractions(p);
+      if (wasWatching) this.sendSelf(p);
     }
 
     const now = this.clock.now();
     const dt = Math.min(now - p.lastMoveAt, GAME.MOVE_MAX_DT_MS);
     p.lastMoveAt = now;
+    // Hazards (shallow water, paddy, mud) slow movement; be lenient at their edges.
+    const speed = GAME.PLAYER_SPEED * (p.alive ? Math.max(speedMultiplierAt(this.map, p.x, p.y), speedMultiplierAt(this.map, m.x, m.y)) : 1);
     const maxBudget = GAME.PLAYER_SPEED * 0.45;
-    p.moveBudget = Math.min(maxBudget, p.moveBudget + ((GAME.PLAYER_SPEED * dt) / 1000) * GAME.MOVE_TOLERANCE);
+    p.moveBudget = Math.min(maxBudget, p.moveBudget + ((speed * dt) / 1000) * GAME.MOVE_TOLERANCE);
 
     const d = dist(p.x, p.y, m.x, m.y);
     const inBounds =
@@ -371,6 +455,11 @@ export class Match {
     return extra.length ? [...this.map.colliders, ...extra] : this.map.colliders;
   }
 
+  /** Living and able to act (not frozen mid-infection). */
+  private canAct(p: MatchPlayer | undefined): p is MatchPlayer {
+    return !!p && p.alive && !p.infection;
+  }
+
   // ════════════════════════════════════════════════════════════════════════
   // Tasks
   // ════════════════════════════════════════════════════════════════════════
@@ -378,22 +467,22 @@ export class Match {
   startTask(playerId: string, taskId: string): Result {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const p = this.players.get(playerId);
-    if (!p || !p.alive) return fail('NOT_ALLOWED');
+    if (!this.canAct(p)) return fail('NOT_ALLOWED');
     if (p.role !== 'HUMAN') return fail('NOT_ALLOWED');
     const task = p.tasks.find((t) => t.id === taskId);
     if (!task) return fail('INVALID_TARGET');
     if (task.done) return fail('ALREADY_DONE');
     const station = this.map.taskStations.find((s) => s.id === task.stationId);
     if (!station || dist(p.x, p.y, station.x, station.y) > GAME.INTERACT_RANGE) return fail('OUT_OF_RANGE');
+    this.clearInteractions(p);
     p.activeTask = { taskId, startedAt: this.clock.now() };
-    p.activeRepair = null;
     return OK;
   }
 
   completeTask(playerId: string, taskId: string): Result {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const p = this.players.get(playerId);
-    if (!p || !p.alive || p.role !== 'HUMAN') return fail('NOT_ALLOWED');
+    if (!this.canAct(p) || p.role !== 'HUMAN') return fail('NOT_ALLOWED');
     const task = p.tasks.find((t) => t.id === taskId);
     if (!task) return fail('INVALID_TARGET');
     if (task.done) return fail('ALREADY_DONE');
@@ -416,65 +505,115 @@ export class Match {
     let done = 0;
     let total = 0;
     for (const p of this.players.values()) {
-      if (p.role !== 'HUMAN') continue;
+      if (!p.wasHuman) continue;
       const d = p.tasks.filter((t) => t.done).length;
       done += d;
-      // A human who is gone only contributes the tasks they finished.
-      total += p.alive ? p.tasks.length : d;
+      // A Human who is gone or was converted only contributes the tasks they finished.
+      total += p.alive && p.role === 'HUMAN' ? p.tasks.length : d;
     }
     return { done, total };
   }
 
   // ════════════════════════════════════════════════════════════════════════
-  // Cat: kill
+  // Cat: attack (kill or infect, per mode)
   // ════════════════════════════════════════════════════════════════════════
 
   kill(killerId: string, targetId: string): Result {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const killer = this.players.get(killerId);
-    if (!killer || !killer.alive || !killer.connected) return fail('NOT_ALLOWED');
+    if (!this.canAct(killer) || !killer.connected) return fail('NOT_ALLOWED');
     if (killer.role !== 'CAT') return fail('NOT_ALLOWED');
     const target = this.players.get(targetId);
-    if (!target || target.id === killer.id || !target.alive || target.role === 'CAT') return fail('INVALID_TARGET');
+    if (!target || target.id === killer.id || !target.alive || target.role === 'CAT' || target.infection) return fail('INVALID_TARGET');
     const now = this.clock.now();
     if (now < killer.killReadyAt) return fail('COOLDOWN');
     if (dist(killer.x, killer.y, target.x, target.y) > GAME.KILL_RANGE) return fail('OUT_OF_RANGE');
     // Line of sight: building walls and locked doors block; props like poles do not.
-    const sight = this.doorLock
+    if (segmentBlocked(killer.x, killer.y, target.x, target.y, 1, this.sightBlockers())) return fail('OUT_OF_RANGE');
+
+    killer.killReadyAt = now + this.killCooldownMs();
+    this.surveillanceAlert(target.x, target.y, now);
+    if (this.mode.catAttack === 'infect') this.infect(killer, target, now);
+    else this.eliminate(killer, target);
+    this.checkWin();
+    return OK;
+  }
+
+  private sightBlockers(): readonly Rect[] {
+    return this.doorLock
       ? [...this.map.walls, ...this.map.doors.filter((d) => this.doorLock!.doorIds.includes(d.id))]
       : this.map.walls;
-    if (segmentBlocked(killer.x, killer.y, target.x, target.y, 1, sight)) return fail('OUT_OF_RANGE');
+  }
 
+  private eliminate(killer: MatchPlayer, target: MatchPlayer): void {
     target.alive = false;
     target.status = 'dead';
     target.moving = false;
-    target.activeTask = null;
-    target.activeRepair = null;
+    this.clearInteractions(target);
     const body: Body = { id: `b_${shortId()}`, victimId: target.id, x: Math.round(target.x), y: Math.round(target.y) };
     this.bodies.set(body.id, body);
-
-    killer.killReadyAt = now + this.settings.killCooldownS * 1000;
     killer.stats.kills++;
 
     // Private notifications only: the victim, the killer and fellow Cats.
     this.outbox.toPlayer(target.id, S2C.PLAYER_KILLED, { victimId: target.id, x: body.x, y: body.y, byYou: false, you: true });
     for (const c of this.players.values()) {
       if (c.role === 'CAT' && c.id !== target.id) {
-        this.outbox.toPlayer(c.id, S2C.PLAYER_KILLED, {
-          victimId: target.id,
-          x: body.x,
-          y: body.y,
-          byYou: c.id === killer.id,
-          you: false,
-        });
+        this.outbox.toPlayer(c.id, S2C.PLAYER_KILLED, { victimId: target.id, x: body.x, y: body.y, byYou: c.id === killer.id, you: false });
       }
     }
     this.sendSelf(target);
     this.sendSelf(killer);
     // Spectators learn about deaths immediately; living players do not.
     this.broadcastState((v) => !v.alive);
+  }
+
+  /** HUMAN → INFECTED (frozen while turning) → CAT. No body is left behind. */
+  private infect(cat: MatchPlayer, target: MatchPlayer, now: number): void {
+    const turnsAt = now + this.mode.infectionTurnMs;
+    target.moving = false;
+    this.clearInteractions(target);
+    target.infection = { turnsAt, timer: this.clock.setTimeout(() => this.completeInfection(target.id), this.mode.infectionTurnMs) };
+    cat.stats.infections++;
+
+    this.outbox.toPlayer(target.id, S2C.PLAYER_INFECTED, { victimId: target.id, byYou: false, you: true, turnsAt });
+    for (const c of this.players.values()) {
+      if (c.role === 'CAT') this.outbox.toPlayer(c.id, S2C.PLAYER_INFECTED, { victimId: target.id, byYou: c.id === cat.id, you: false, turnsAt });
+    }
+    this.sendSelf(target);
+    this.sendSelf(cat);
+    if (this.mode.infectionTurnMs <= 0) this.completeInfection(target.id);
+  }
+
+  private completeInfection(playerId: string): void {
+    const p = this.players.get(playerId);
+    if (!p?.infection) return;
+    p.infection.timer.cancel();
+    p.infection = null;
+    if (!p.alive || this.phase === 'FINISHED') return;
+    const now = this.clock.now();
+    p.role = 'CAT';
+    p.infected = true;
+    p.killReadyAt = now + this.killCooldownMs();
+    p.sabotageReadyAt = now + GAME.FIRST_SABOTAGE_COOLDOWN_MS;
+    p.lastMoveAt = now;
+    p.moveBudget = 0;
+
+    // The new Cat learns its pack; the pack learns about the new member. Humans learn nothing.
+    this.outbox.toPlayer(p.id, S2C.ROLE_CHANGED, { role: this.roleInfoFor(p), reason: 'infected' });
+    for (const c of this.players.values()) {
+      if (c.role === 'CAT' && c.id !== p.id) this.outbox.toPlayer(c.id, S2C.ROLE_CHANGED, { role: this.roleInfoFor(c), reason: 'fellow_joined' });
+    }
+    this.sendSelf(p);
+    this.broadcastState((v) => v.role === 'CAT' || !v.alive);
     this.checkWin();
-    return OK;
+  }
+
+  /** Future mode: a working camera or drone that sees an attack alerts the whole town. */
+  private surveillanceAlert(x: number, y: number, now: number): void {
+    if (!this.mode.surveillanceAlerts || !this.camerasOnline()) return;
+    if (!this.visibleToCameras(x, y, now)) return;
+    const zoneId = zoneAt(this.map, { x, y });
+    for (const o of this.players.values()) this.outbox.toPlayer(o.id, S2C.SURVEILLANCE_ALERT, { zoneId });
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -485,6 +624,7 @@ export class Match {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const p = this.players.get(playerId);
     if (!p || p.role !== 'CAT' || p.status === 'left') return fail('NOT_ALLOWED');
+    if (!availableSabotages(this.map).includes(type)) return fail('INVALID_ACTION');
     const now = this.clock.now();
     if (now < p.sabotageReadyAt) return fail('COOLDOWN');
     const def = SABOTAGE_DEFS[type];
@@ -548,36 +688,116 @@ export class Match {
   startRepair(playerId: string, stationId: string): Result {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const p = this.players.get(playerId);
-    if (!p || !p.alive) return fail('NOT_ALLOWED');
+    if (!this.canAct(p)) return fail('NOT_ALLOWED');
     if (!this.sabotage) return fail('INVALID_ACTION');
-    const def = SABOTAGE_DEFS[this.sabotage.type];
-    if (!def.repairStationIds.includes(stationId) || this.sabotage.repaired.has(stationId)) return fail('INVALID_TARGET');
-    const st = this.map.sabotageStations.find((s) => s.id === stationId);
-    if (!st || dist(p.x, p.y, st.x, st.y) > GAME.INTERACT_RANGE) return fail('OUT_OF_RANGE');
+    const st = repairStationsFor(this.map, this.sabotage.type).find((s) => s.id === stationId);
+    if (!st || this.sabotage.repaired.has(stationId)) return fail('INVALID_TARGET');
+    if (dist(p.x, p.y, st.x, st.y) > GAME.INTERACT_RANGE) return fail('OUT_OF_RANGE');
+    this.clearInteractions(p);
     p.activeRepair = { stationId, startedAt: this.clock.now() };
-    p.activeTask = null;
     return OK;
   }
 
   completeRepair(playerId: string, stationId: string): Result {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const p = this.players.get(playerId);
-    if (!p || !p.alive) return fail('NOT_ALLOWED');
+    if (!this.canAct(p)) return fail('NOT_ALLOWED');
     if (!this.sabotage) return fail('INVALID_ACTION');
     if (!p.activeRepair || p.activeRepair.stationId !== stationId) return fail('INVALID_ACTION');
     const def = SABOTAGE_DEFS[this.sabotage.type];
     if (this.clock.now() - p.activeRepair.startedAt < def.repairMinMs) return fail('TOO_FAST');
-    const st = this.map.sabotageStations.find((s) => s.id === stationId);
+    const stations = repairStationsFor(this.map, this.sabotage.type);
+    const st = stations.find((s) => s.id === stationId);
     if (!st || dist(p.x, p.y, st.x, st.y) > GAME.INTERACT_RANGE * 1.5) return fail('OUT_OF_RANGE');
 
     p.activeRepair = null;
     this.sabotage.repaired.add(stationId);
     p.stats.repairs++;
-    const fixed =
-      def.repairMode === 'any' || def.repairStationIds.every((id) => this.sabotage!.repaired.has(id));
+    const fixed = def.repairMode === 'any' || stations.every((s) => this.sabotage!.repaired.has(s.id));
     if (fixed) this.endSabotage(true);
     this.broadcastState();
     return OK;
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // Mode objectives (antidote parts)
+  // ════════════════════════════════════════════════════════════════════════
+
+  startObjective(playerId: string, objectiveId: string): Result {
+    if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
+    const p = this.players.get(playerId);
+    if (!this.canAct(p) || p.role !== 'HUMAN') return fail('NOT_ALLOWED');
+    if (!this.mode.useAntidote) return fail('INVALID_ACTION');
+    const o = this.map.objectives.find((x) => x.id === objectiveId);
+    if (!o) return fail('INVALID_TARGET');
+    if (this.antidoteCollected.has(o.id)) return fail('ALREADY_DONE');
+    if (dist(p.x, p.y, o.x, o.y) > GAME.INTERACT_RANGE) return fail('OUT_OF_RANGE');
+    this.clearInteractions(p);
+    p.activeObjective = { objectiveId, startedAt: this.clock.now() };
+    return OK;
+  }
+
+  completeObjective(playerId: string, objectiveId: string): Result {
+    if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
+    const p = this.players.get(playerId);
+    if (!this.canAct(p) || p.role !== 'HUMAN') return fail('NOT_ALLOWED');
+    if (!p.activeObjective || p.activeObjective.objectiveId !== objectiveId) return fail('INVALID_ACTION');
+    if (this.antidoteCollected.has(objectiveId)) return fail('ALREADY_DONE');
+    if (this.clock.now() - p.activeObjective.startedAt < GAME.OBJECTIVE_MIN_MS) return fail('TOO_FAST');
+    const o = this.map.objectives.find((x) => x.id === objectiveId);
+    if (!o || dist(p.x, p.y, o.x, o.y) > GAME.INTERACT_RANGE * 1.5) return fail('OUT_OF_RANGE');
+
+    p.activeObjective = null;
+    this.antidoteCollected.add(o.id);
+    p.stats.objectives++;
+    for (const other of this.players.values()) if (other.activeObjective?.objectiveId === o.id) other.activeObjective = null;
+    const payload = { objectiveId: o.id, byName: p.name, collected: this.antidoteCollected.size, total: this.antidoteTotal };
+    for (const other of this.players.values()) this.outbox.toPlayer(other.id, S2C.OBJECTIVE_COLLECTED, payload);
+    this.broadcastState();
+    this.checkWin();
+    return OK;
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // Surveillance (security console camera feed)
+  // ════════════════════════════════════════════════════════════════════════
+
+  private camerasOnline(): boolean {
+    return this.sabotage?.type !== 'CCTV_FAILURE';
+  }
+
+  /** A working camera or drone has an unobstructed view of this point. */
+  private visibleToCameras(x: number, y: number, t: number): boolean {
+    return camerasSeeing(this.map, x, y, t).some((c) => {
+      // Drones look down from above; fixed cameras are blocked by building walls.
+      if (c.kind === 'drone') return true;
+      const at = cameraPosition(c, t);
+      return !segmentBlocked(at.x, at.y, x, y, 1, this.map.walls);
+    });
+  }
+
+  setWatchingCameras(playerId: string, watching: boolean): Result {
+    if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
+    const p = this.players.get(playerId);
+    if (!this.canAct(p)) return fail('NOT_ALLOWED');
+    if (watching) {
+      if (!this.map.securityConsoles.some((c) => dist(p.x, p.y, c.x, c.y) <= GAME.INTERACT_RANGE)) return fail('OUT_OF_RANGE');
+      this.clearInteractions(p);
+    }
+    p.watchingCameras = watching;
+    this.sendSelf(p);
+    return OK;
+  }
+
+  private cameraFeed(t: number): CameraFeed {
+    const feed: CameraFeed = { t, p: [], b: [] };
+    if (!this.camerasOnline()) return feed;
+    for (const o of this.players.values()) {
+      if (!o.alive || o.status === 'left') continue;
+      if (this.visibleToCameras(o.x, o.y, t)) feed.p.push([o.id, Math.round(o.x), Math.round(o.y)]);
+    }
+    for (const b of this.bodies.values()) if (this.visibleToCameras(b.x, b.y, t)) feed.b.push([b.id, b.victimId, b.x, b.y]);
+    return feed;
   }
 
   // ════════════════════════════════════════════════════════════════════════
@@ -587,7 +807,7 @@ export class Match {
   report(playerId: string, bodyId: string): Result {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const p = this.players.get(playerId);
-    if (!p || !p.alive) return fail('NOT_ALLOWED');
+    if (!this.canAct(p)) return fail('NOT_ALLOWED');
     const body = this.bodies.get(bodyId);
     if (!body) return fail('INVALID_TARGET');
     if (dist(p.x, p.y, body.x, body.y) > GAME.REPORT_RANGE) return fail('OUT_OF_RANGE');
@@ -599,11 +819,11 @@ export class Match {
   callEmergency(playerId: string): Result {
     if (this.phase !== 'PLAYING') return fail('INVALID_PHASE');
     const p = this.players.get(playerId);
-    if (!p || !p.alive) return fail('NOT_ALLOWED');
-    if (p.emergencyLeft <= 0) return fail('NOT_ALLOWED');
+    if (!this.canAct(p)) return fail('NOT_ALLOWED');
+    if (!this.mode.emergencyMeetings || p.emergencyLeft <= 0) return fail('NOT_ALLOWED');
     if (this.clock.now() < this.emergencyReadyAt) return fail('COOLDOWN');
     if (this.sabotage && SABOTAGE_DEFS[this.sabotage.type].critical) return fail('NOT_ALLOWED');
-    if (dist(p.x, p.y, this.map.emergency.x, this.map.emergency.y) > GAME.EMERGENCY_RANGE) return fail('OUT_OF_RANGE');
+    if (!this.map.meetingLocations.some((l) => dist(p.x, p.y, l.x, l.y) <= GAME.EMERGENCY_RANGE)) return fail('OUT_OF_RANGE');
     p.emergencyLeft--;
     p.stats.meetingsCalled++;
     this.startMeeting('emergency', p.id, null);
@@ -611,9 +831,14 @@ export class Match {
   }
 
   private startMeeting(reason: 'report' | 'emergency', callerId: string, reportedVictimId: string | null): void {
+    // Anyone still turning finishes turning before the town gathers.
+    for (const o of this.players.values()) if (o.infection) this.completeInfection(o.id);
+    if (this.phase !== 'PLAYING') return;
+
     const now = this.clock.now();
     if (!this.setPhase('REPORT', now + this.timings.reportSplashMs)) return;
     this.meetingsHeld++;
+    this.pauseSurvivalClock(now);
 
     // All deaths so far become public; the town clears the bodies.
     for (const o of this.players.values()) if (!o.alive) o.deathRevealed = true;
@@ -624,8 +849,7 @@ export class Match {
       this.doorLock = null;
     }
     for (const o of this.players.values()) {
-      o.activeTask = null;
-      o.activeRepair = null;
+      this.clearInteractions(o);
       o.moving = false;
     }
 
@@ -800,8 +1024,7 @@ export class Match {
     p.disconnectTimer = null;
     if (!connected) {
       p.moving = false;
-      p.activeTask = null;
-      p.activeRepair = null;
+      this.clearInteractions(p);
       p.disconnectTimer = this.clock.setTimeout(() => this.playerLeft(playerId), this.timings.reconnectGraceMs);
     } else {
       p.lastMoveAt = this.clock.now();
@@ -817,10 +1040,13 @@ export class Match {
     if (!p || p.status === 'left' || this.phase === 'FINISHED') return;
     p.disconnectTimer?.cancel();
     p.disconnectTimer = null;
+    p.infection?.timer.cancel();
+    p.infection = null;
     p.alive = false;
     p.status = 'left';
     p.connected = false;
     p.deathRevealed = true;
+    this.clearInteractions(p);
     for (const o of this.players.values()) if (o.id !== p.id) this.outbox.toPlayer(o.id, S2C.PLAYER_LEFT, { id: p.id, name: p.name });
     if (this.meeting) this.meeting.votes.delete(p.id);
     this.broadcastState();
@@ -858,10 +1084,12 @@ export class Match {
 
   private currentWin(): WinResult | null {
     const { done, total } = this.taskProgress();
-    return evaluateWin({
+    return this.mode.evaluateWin({
       players: [...this.players.values()].map((p) => ({ role: p.role, alive: p.alive })),
       tasksDone: done,
       tasksTotal: total,
+      antidote: this.antidoteTotal > 0 ? { collected: this.antidoteCollected.size, total: this.antidoteTotal } : null,
+      survivalExpired: this.survivalExpired,
     });
   }
 
@@ -875,11 +1103,12 @@ export class Match {
 
     const endPlayers: EndPlayerView[] = [...this.players.values()]
       .sort((a, b) => a.slot - b.slot)
-      .map((p) => ({ id: p.id, name: p.name, appearance: p.appearance, role: p.role, status: p.status, stats: p.stats }));
+      .map((p) => ({ id: p.id, name: p.name, appearance: p.appearance, role: p.role, infected: p.infected, status: p.status, stats: p.stats }));
     const totals = {
       tasksDone: done,
       tasksTotal: total,
       kills: endPlayers.reduce((s, p) => s + p.stats.kills, 0),
+      infections: endPlayers.reduce((s, p) => s + p.stats.infections, 0),
       sabotages: endPlayers.reduce((s, p) => s + p.stats.sabotages, 0),
       meetings: this.meetingsHeld,
     };
@@ -897,6 +1126,7 @@ export class Match {
     };
 
     for (const p of this.players.values()) {
+      // Converted players finish on the Cat team.
       const won = teamOf(p.role) === win.winner;
       const rewards = matchRewards({ won, survived: p.alive, stats: p.stats });
       summary.players.push({ id: p.id, name: p.name, role: p.role, status: p.status, won, stats: p.stats, ...rewards });
@@ -931,8 +1161,11 @@ export class Match {
 
   private visionFor(p: MatchPlayer): number {
     if (!p.alive) return GAME.VISION_SPECTATOR;
-    if (p.role === 'CAT') return GAME.VISION_CAT;
-    return this.sabotage?.type === 'POWER_FAILURE' ? GAME.VISION_POWER_OUT : GAME.VISION_HUMAN;
+    const base =
+      p.role === 'CAT'
+        ? GAME.VISION_CAT * this.mode.catVisionMultiplier
+        : (this.sabotage?.type === 'POWER_FAILURE' ? GAME.VISION_POWER_OUT : GAME.VISION_HUMAN) * this.mode.humanVisionMultiplier;
+    return Math.round(base * this.map.specialRules.visionMultiplier);
   }
 
   private selfFor(p: MatchPlayer): SelfState {
@@ -946,6 +1179,8 @@ export class Match {
       emergencyLeft: p.emergencyLeft,
       emergencyReadyAt: this.emergencyReadyAt,
       visionRadius: this.visionFor(p),
+      infectedUntil: p.infection?.turnsAt ?? null,
+      watchingCameras: p.watchingCameras,
       x: Math.round(p.x),
       y: Math.round(p.y),
       teleportSeq: p.teleportSeq,
@@ -991,6 +1226,12 @@ export class Match {
           }
         : null,
       lockedDoorIds: this.doorLock ? [...this.doorLock.doorIds] : [],
+      modeState: {
+        survivalEndsAt: this.survivalEndsAt,
+        survivalRemainingMs: this.survivalRemainingMs,
+        antidote: this.antidoteTotal > 0 ? { collectedIds: [...this.antidoteCollected], total: this.antidoteTotal } : null,
+        camerasOnline: this.camerasOnline(),
+      },
       meeting: m
         ? {
             reason: m.reason,
@@ -1020,6 +1261,7 @@ export class Match {
     if (this.phase !== 'PLAYING') return;
     const t = this.clock.now();
     const all = [...this.players.values()];
+    let feed: CameraFeed | null = null;
     for (const viewer of all) {
       if (!viewer.connected || viewer.status === 'left') continue;
       const spectator = !viewer.alive;
@@ -1038,15 +1280,23 @@ export class Match {
         if (spectator || dist(viewer.x, viewer.y, b.x, b.y) <= range) snap.b.push([b.id, b.victimId, b.x, b.y]);
       }
       this.outbox.toPlayer(viewer.id, S2C.GAME_SNAPSHOT, snap);
+      if (viewer.watchingCameras && viewer.alive) this.outbox.toPlayer(viewer.id, S2C.CAMERA_FEED, (feed ??= this.cameraFeed(t)));
     }
   }
 
-  private stationPosFor(p: MatchPlayer): { x: number; y: number } | null {
+  /** Where the player's current interaction is (moving too far from it cancels it). */
+  private interactionPosFor(p: MatchPlayer): { x: number; y: number } | null {
     if (p.activeTask) {
       const task = p.tasks.find((t) => t.id === p.activeTask!.taskId);
       return this.map.taskStations.find((s) => s.id === task?.stationId) ?? null;
     }
     if (p.activeRepair) return this.map.sabotageStations.find((s) => s.id === p.activeRepair!.stationId) ?? null;
+    if (p.activeObjective) return this.map.objectives.find((o) => o.id === p.activeObjective!.objectiveId) ?? null;
+    if (p.watchingCameras) {
+      let best: { x: number; y: number } | null = null;
+      for (const c of this.map.securityConsoles) if (!best || dist(p.x, p.y, c.x, c.y) < dist(p.x, p.y, best.x, best.y)) best = c;
+      return best;
+    }
     return null;
   }
 

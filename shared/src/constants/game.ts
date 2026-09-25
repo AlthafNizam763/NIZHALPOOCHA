@@ -28,6 +28,8 @@ export const GAME = {
   REPORT_RANGE: 120,
   KILL_RANGE: 90,
   EMERGENCY_RANGE: 90,
+  /** Minimum hold time to pick up a mode objective (antidote part). */
+  OBJECTIVE_MIN_MS: 1500,
 
   VISION_HUMAN: 330,
   VISION_CAT: 430,

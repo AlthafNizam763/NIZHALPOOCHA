@@ -1,9 +1,10 @@
 /**
- * Sabotage framework. Implemented types are listed in SABOTAGE_TYPES; each has a
- * definition with duration, repair stations and repair mode. New sabotages are
- * added by extending this table and handling their effect in the engine.
+ * Sabotage framework. Each type has a definition with duration and repair mode.
+ * Repair stations are NOT listed here: every map places its own stations
+ * (`GameMapDef.sabotageStations`), and a sabotage is only available on maps
+ * that have a station for it (see `availableSabotages`).
  */
-export const SABOTAGE_TYPES = ['POWER_FAILURE', 'COMMS_FAILURE', 'PUMP_FAILURE', 'DOOR_LOCK'] as const;
+export const SABOTAGE_TYPES = ['POWER_FAILURE', 'COMMS_FAILURE', 'PUMP_FAILURE', 'CCTV_FAILURE', 'DOOR_LOCK'] as const;
 export type SabotageType = (typeof SABOTAGE_TYPES)[number];
 
 export interface SabotageDef {
@@ -13,9 +14,7 @@ export interface SabotageDef {
   critical: boolean;
   /** Auto-ends after this long (DOOR_LOCK) or fails the match (critical). null = until repaired. */
   durationMs: number | null;
-  /** Map station ids that must be repaired. */
-  repairStationIds: readonly string[];
-  /** 'any': one station fixes it. 'all': every station must be fixed. */
+  /** 'any': one station fixes it. 'all': every station of the map must be fixed. */
   repairMode: 'any' | 'all' | 'none';
   /** Time a repair interaction must take (server validated). */
   repairMinMs: number;
@@ -29,7 +28,6 @@ export const SABOTAGE_DEFS: Record<SabotageType, SabotageDef> = {
     nameKey: 'sabotage.POWER_FAILURE',
     critical: false,
     durationMs: null,
-    repairStationIds: ['power_panel'],
     repairMode: 'any',
     repairMinMs: 1500,
     major: true,
@@ -39,7 +37,6 @@ export const SABOTAGE_DEFS: Record<SabotageType, SabotageDef> = {
     nameKey: 'sabotage.COMMS_FAILURE',
     critical: false,
     durationMs: null,
-    repairStationIds: ['comms_radio'],
     repairMode: 'any',
     repairMinMs: 1500,
     major: true,
@@ -49,9 +46,17 @@ export const SABOTAGE_DEFS: Record<SabotageType, SabotageDef> = {
     nameKey: 'sabotage.PUMP_FAILURE',
     critical: true,
     durationMs: 50_000,
-    repairStationIds: ['pump_valve_a', 'pump_valve_b'],
     repairMode: 'all',
     repairMinMs: 1200,
+    major: true,
+  },
+  CCTV_FAILURE: {
+    type: 'CCTV_FAILURE',
+    nameKey: 'sabotage.CCTV_FAILURE',
+    critical: false,
+    durationMs: null,
+    repairMode: 'any',
+    repairMinMs: 1500,
     major: true,
   },
   DOOR_LOCK: {
@@ -59,11 +64,10 @@ export const SABOTAGE_DEFS: Record<SabotageType, SabotageDef> = {
     nameKey: 'sabotage.DOOR_LOCK',
     critical: false,
     durationMs: 12_000,
-    repairStationIds: [],
     repairMode: 'none',
     repairMinMs: 0,
     major: false,
   },
 };
 
-export const FUTURE_SABOTAGES = ['CCTV_FAILURE', 'WATER_FAILURE', 'ROAD_BLOCK', 'ALARM'] as const;
+export const FUTURE_SABOTAGES = ['WATER_FAILURE', 'ROAD_BLOCK', 'ALARM'] as const;

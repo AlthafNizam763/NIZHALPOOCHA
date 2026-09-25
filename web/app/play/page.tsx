@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/state/authStore';
 import { useGame } from '@/state/gameStore';
+import { useRoom } from '@/state/roomStore';
 import { useSettings } from '@/state/settingsStore';
 import { useT } from '@/hooks/useT';
 import { useIsTouch } from '@/hooks/useDevice';
@@ -12,7 +13,7 @@ import { GameCanvas } from '@/components/game/GameCanvas';
 import { ActionButtons, SpectatorBar, TaskPanel, TopCenter, TopRight } from '@/components/game/Hud';
 import { Joystick } from '@/components/game/Joystick';
 import { TaskModal } from '@/components/game/TaskModal';
-import { GameMenu, MapOverlay, ReportSplash, RoleReveal, RotateDevice, SabotageMenu } from '@/components/game/Overlays';
+import { CameraPanel, GameMenu, InfectionOverlay, MapOverlay, ReportSplash, RoleReveal, RotateDevice, SabotageMenu } from '@/components/game/Overlays';
 import { MeetingScreen, VoteResultView } from '@/components/game/Meeting';
 import { GameOver } from '@/components/game/GameOver';
 import { MonsoonBackdrop } from '@/components/ui/Backdrop';
@@ -43,11 +44,12 @@ export default function PlayPage() {
 
   if (!ready || !uid) return null;
   if (!hasState) {
+    const mapId = useRoom.getState().room?.settings.mapId ?? 'kadalimukku_old_town';
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center gap-3">
         <MonsoonBackdrop />
         <Spinner />
-        <span className="text-mist">{t('map.kadalimukku_night')}</span>
+        <span className="text-mist">{t(`map.${mapId}`)}</span>
         <GameOver />
       </main>
     );
@@ -83,6 +85,8 @@ export default function PlayPage() {
       <TaskModal />
       <SabotageMenu />
       <MapOverlay />
+      <CameraPanel />
+      <InfectionOverlay />
       <GameMenu />
       <RoleReveal />
       <ReportSplash />
