@@ -8,7 +8,10 @@ import {
   sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
+  getRedirectResult,
+  signInWithCredential,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   updateProfile,
   type User,
@@ -74,6 +77,9 @@ export function initAuth(): () => void {
     }
     return () => {};
   }
+  // Finishes a Google redirect sign-in (used when the browser blocks the popup).
+  // Success arrives through the auth listener; only log failures here.
+  if (!Capacitor.isNativePlatform()) getRedirectResult(fbAuth()).catch((err) => console.warn('[auth] Google redirect sign-in failed', err));
   return onAuthStateChanged(fbAuth(), (u) => void applyUser(u ? toAuthUser(u) : null, true));
 }
 
@@ -105,10 +111,48 @@ export async function signInGuest() {
   await signInAnonymously(fbAuth());
 }
 
+/**
+ * Google sign-in.
+ *  - Native apps: the system Google account picker (via @capacitor-firebase/authentication),
+ *    then the returned ID token signs in the Firebase JS SDK, so the rest of the app is unchanged.
+ *    The plugin is only bundled once Firebase's native config file is added (docs/MOBILE.md).
+ *  - Browsers: a popup, falling back to a full-page redirect when popups are blocked.
+ */
 export async function signInGoogle() {
-  // Popup auth is web-only; native builds need a native Google plugin (see docs/MOBILE.md).
-  if (Capacitor.isNativePlatform()) throw new FirebaseError('auth/operation-not-supported-in-this-environment', 'native');
-  await signInWithPopup(fbAuth(), new GoogleAuthProvider());
+  if (Capacitor.isNativePlatform()) {
+    if (!Capacitor.isPluginAvailable('FirebaseAuthentication')) throw new FirebaseError('auth/google-not-configured', 'native Google sign-in is not set up in this build');
+    const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+    let idToken: string | undefined;
+    let accessToken: string | undefined;
+    try {
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      idToken = result.credential?.idToken;
+      accessToken = result.credential?.accessToken;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (/cancel/i.test(message)) throw new FirebaseError('auth/popup-closed-by-user', message);
+      // "10:" / DEVELOPER_ERROR = this build's signing SHA-1 is not registered in Firebase.
+      console.warn('[auth] Native Google sign-in failed. Check the SHA-1 fingerprint and google-services.json (docs/MOBILE.md).', err);
+      throw new FirebaseError('auth/google-not-configured', message);
+    }
+    if (!idToken) throw new FirebaseError('auth/google-not-configured', 'no ID token returned');
+    await signInWithCredential(fbAuth(), GoogleAuthProvider.credential(idToken, accessToken));
+    return;
+  }
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    await signInWithPopup(fbAuth(), provider);
+  } catch (err) {
+    if (err instanceof FirebaseError && err.code === 'auth/popup-blocked') return signInWithRedirect(fbAuth(), provider);
+    if (err instanceof FirebaseError && err.code === 'auth/operation-not-allowed') {
+      console.warn('[auth] The Google provider is disabled for this Firebase project. Enable it in Firebase console → Authentication → Sign-in method → Google.');
+    }
+    if (err instanceof FirebaseError && err.code === 'auth/unauthorized-domain') {
+      console.warn(`[auth] "${location.hostname}" is not an authorized domain. Add it in Firebase console → Authentication → Settings → Authorized domains.`);
+    }
+    throw err;
+  }
 }
 
 export async function resetPassword(email: string) {
@@ -168,6 +212,12 @@ export function authErrorKey(err: unknown): I18nKey {
     case 'auth/operation-not-supported-in-this-environment':
     case 'auth/operation-not-allowed':
       return 'auth.err.unsupported';
+    case 'auth/unauthorized-domain':
+      return 'auth.err.domain';
+    case 'auth/google-not-configured':
+      return 'auth.err.googleSetup';
+    case 'auth/popup-blocked':
+      return 'auth.err.popupBlocked';
     default:
       return 'auth.err.generic';
   }

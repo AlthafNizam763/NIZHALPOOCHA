@@ -53,11 +53,8 @@ export default function TutorialPage() {
   }, [inRoom, router]);
 
   useEffect(() => {
-    void lockLandscape(true);
-    return () => {
-      void lockLandscape(false);
-      bridge.resetInput();
-    };
+    void lockLandscape();
+    return () => bridge.resetInput();
   }, []);
 
   useEffect(() => {

@@ -12,6 +12,7 @@ import { setPresence } from '@/services/presence';
 import { isInMatch } from '@nizhal/shared';
 import { Toasts } from './ui/Feedback';
 import { ConnectionOverlay } from './ConnectionOverlay';
+import { lockLandscape } from '@/services/orientation';
 
 async function setupNative() {
   if (!Capacitor.isNativePlatform()) return;
@@ -21,6 +22,8 @@ async function setupNative() {
     import('@capacitor/app'),
     import('@capacitor/keyboard'),
   ]);
+  // Landscape-only app, starting with the sign-in screen.
+  await lockLandscape();
   await StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
   await StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
   await Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});

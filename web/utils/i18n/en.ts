@@ -398,6 +398,9 @@ export const en = {
 
   'rooms.refresh': 'Refresh',
   'set.account': 'Account',
+  'auth.err.domain': "Google sign-in isn't allowed on this web address yet.",
+  'auth.err.googleSetup': "Google sign-in isn't set up in this version of the app yet. Use email or play as a guest.",
+  'auth.err.popupBlocked': 'Your browser blocked the Google window. Allow pop-ups and try again.',
   'create.moreOptions': 'More options',
   'lobby.catsAdjusted': 'With {n} players, {cats} Cat(s) will play.',
   'kill.struck': 'Struck in the dark',

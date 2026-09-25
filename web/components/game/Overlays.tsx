@@ -7,7 +7,7 @@ import { useUi } from '@/state/uiStore';
 import { serverNow } from '@/state/connectionStore';
 import { useSettings } from '@/state/settingsStore';
 import { useT } from '@/hooks/useT';
-import { useIsPortrait, useIsTouch, useTicker } from '@/hooks/useDevice';
+import { useTicker } from '@/hooks/useDevice';
 import { actions as net, errorKey, rooms } from '@/services/net';
 import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';
@@ -284,21 +284,8 @@ export function ReportSplash() {
 }
 
 // ── Portrait warning for gameplay on phones ─────────────────────────────
-export function RotateDevice() {
-  const t = useT();
-  const portrait = useIsPortrait();
-  const touch = useIsTouch();
-  if (!portrait || !touch) return null;
-  return (
-    <div className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-ink p-8 text-center">
-      <div className="animate-rotate-phone h-24 w-14 rounded-2xl border-4 border-lamp bg-night shadow-[0_0_24px_-6px_var(--color-lamp)]">
-        <div className="mx-auto mt-1.5 h-1 w-4 rounded-full bg-lamp/70" />
-      </div>
-      <div className="headline text-3xl leading-tight text-paper">{t('rotate.title')}</div>
-      <p className="max-w-xs text-sm leading-snug text-mist">{t('rotate.hint')}</p>
-    </div>
-  );
-}
+// The rotate prompt is shared with the sign-in screens; re-exported for the game.
+export { RotateDevice } from '@/components/ui/RotateDevice';
 
 /** Seconds remaining until a server deadline (re-rendering handled by caller). */
 export function secondsUntil(at: number | null | undefined): number {

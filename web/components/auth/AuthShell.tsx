@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Controls';
 import { Notice } from '@/components/ui/Feedback';
 import { CharacterAvatar } from '@/components/ui/CharacterAvatar';
+import { RotateDevice } from '@/components/ui/RotateDevice';
 
 /** Villagers waiting under the lamp on the sign-in screen (illustration only). */
 const WAITING: Appearance[] = [
@@ -30,15 +31,17 @@ export function AuthShell({ title, children }: { title: string; children: ReactN
   }, [status, router]);
 
   return (
-    <main className="relative flex min-h-dvh items-center justify-center p-4 pt-safe pb-safe">
+    <main className="relative flex min-h-dvh items-center justify-center p-4 pt-safe pb-safe short:px-6 short:py-2">
       <MonsoonBackdrop />
-      <div className="grid w-full max-w-5xl items-center gap-8 md:grid-cols-[1.1fr_1fr]">
-        <div className="hidden flex-col items-center text-center md:flex">
+      {/* Sign-in is landscape on phones, like the rest of the game (native apps are locked). */}
+      <RotateDevice phonesOnly />
+      <div className="grid w-full max-w-5xl items-center gap-8 md:grid-cols-[1.1fr_1fr] short:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] short:gap-5">
+        <div className="hidden flex-col items-center text-center md:flex short:flex">
           <div className="animate-rise">
             <Logo small />
           </div>
-          <p className="mx-auto mt-4 max-w-sm font-display text-lg font-bold text-paper">{t('app.tagline')}</p>
-          <div aria-hidden className="relative mt-6 flex items-end gap-4">
+          <p className="mx-auto mt-4 max-w-sm font-display text-lg font-bold text-paper short:mt-2 short:text-sm">{t('app.tagline')}</p>
+          <div aria-hidden className="relative mt-6 flex items-end gap-4 short:hidden">
             <span className="absolute inset-x-0 -bottom-1 mx-auto h-6 w-56 rounded-[50%] bg-[radial-gradient(ellipse,rgba(241,180,62,.3),transparent_70%)]" />
             <div className="animate-idle">
               <CharacterAvatar appearance={WAITING[0]!} size={120} mood="scared" blink />
@@ -48,12 +51,12 @@ export function AuthShell({ title, children }: { title: string; children: ReactN
             </div>
           </div>
         </div>
-        <Panel kasavu className="animate-screen-in w-full p-5 pt-7 sm:p-7">
-          <div className="mb-4 md:hidden">
+        <Panel kasavu className="animate-screen-in w-full p-5 pt-7 sm:p-7 short:p-3.5 short:pt-4">
+          <div className="mb-4 md:hidden short:hidden">
             <Logo small />
           </div>
-          <h1 className="headline mb-1 text-3xl text-paper">{title}</h1>
-          <div aria-hidden className="mb-5 flex gap-1.5">
+          <h1 className="headline mb-1 text-3xl text-paper short:text-2xl">{title}</h1>
+          <div aria-hidden className="mb-5 flex gap-1.5 short:mb-2.5">
             <span className="h-[3px] w-10 rounded-full bg-lamp" />
             <span className="h-[3px] w-3 rounded-full bg-gold-deep" />
           </div>
@@ -100,15 +103,15 @@ function AltSignIn() {
   }
 
   return (
-    <div className="mt-3">
+    <div className="mt-3 short:mt-1.5 short:grid short:grid-cols-2 short:gap-x-2">
       {firebaseEnabled && (
         <>
-          <div className="my-4 flex items-center gap-3 font-display text-xs font-bold uppercase tracking-wider text-rain">
+          <div className="my-4 short:col-span-2 short:my-1.5 flex items-center gap-3 font-display text-xs font-bold uppercase tracking-wider text-rain">
             <span className="h-px flex-1 bg-line" />
             {t('auth.or')}
             <span className="h-px flex-1 bg-line" />
           </div>
-          <Button variant="secondary" full icon={<GoogleMark />} loading={busy === 'google'} disabled={!!busy} onClick={() => void run('google', signInGoogle)}>
+          <Button variant="secondary" full className="short:min-h-10" icon={<GoogleMark />} loading={busy === 'google'} disabled={!!busy} onClick={() => void run('google', signInGoogle)}>
             {t('auth.google')}
           </Button>
         </>
@@ -117,7 +120,7 @@ function AltSignIn() {
         variant={firebaseEnabled ? 'ghost' : 'gold'}
         size={firebaseEnabled ? 'md' : 'lg'}
         full
-        className="mt-2"
+        className="mt-2 short:mt-0 short:min-h-10"
         loading={busy === 'guest'}
         disabled={!!busy}
         onClick={() => void run('guest', signInGuest)}
@@ -125,7 +128,7 @@ function AltSignIn() {
         {t('auth.guest')}
       </Button>
       {error && (
-        <Notice tone="danger" className="mt-2">
+        <Notice tone="danger" className="mt-2 short:col-span-2">
           {t(error)}
         </Notice>
       )}
@@ -136,9 +139,9 @@ function AltSignIn() {
 export function AuthSwitch({ prompt, action, href }: { prompt: string; action: string; href: string }) {
   const router = useRouter();
   return (
-    <p className="mt-3 text-center text-sm text-rain">
+    <p className="mt-3 text-center text-sm text-rain short:mt-0 short:text-xs">
       {prompt}{' '}
-      <button type="button" onClick={() => router.push(href)} className="h-10 font-display font-bold text-lamp underline-offset-4 hover:underline">
+      <button type="button" onClick={() => router.push(href)} className="h-10 font-display font-bold text-lamp short:h-8 underline-offset-4 hover:underline">
         {action}
       </button>
     </p>

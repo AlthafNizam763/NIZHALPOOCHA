@@ -32,11 +32,8 @@ export default function PlayPage() {
   const touch = useIsTouch();
 
   useEffect(() => {
-    void lockLandscape(true);
-    return () => {
-      void lockLandscape(false);
-      bridge.resetInput();
-    };
+    void lockLandscape();
+    return () => bridge.resetInput();
   }, []);
 
   useEffect(() => {

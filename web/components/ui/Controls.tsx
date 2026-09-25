@@ -19,10 +19,10 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 export function Field({ label, hint, ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-semibold text-mist">{label}</span>
+      <span className="mb-1.5 block text-sm font-semibold text-mist short:mb-1 short:text-xs">{label}</span>
       <input
         {...rest}
-        className="h-12 w-full rounded-2xl border-2 border-line bg-night px-4 text-paper outline-none transition-colors placeholder:text-rain/60 focus:border-lamp focus:bg-[#10201a]"
+        className="h-12 w-full rounded-2xl border-2 border-line bg-night px-4 short:h-10 short:rounded-xl text-paper outline-none transition-colors placeholder:text-rain/60 focus:border-lamp focus:bg-[#10201a]"
       />
       {hint && <span className="mt-1 block text-xs text-rain">{hint}</span>}
     </label>

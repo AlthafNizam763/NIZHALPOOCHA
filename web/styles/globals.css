@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* short: a phone held in landscape (sign-in screens and other forms compact themselves). */
+@custom-variant short (@media (orientation: landscape) and (max-height: 500px));
+
 /* ─────────────────────────────────────────────────────────────────────────
    Nizhalpoocha design tokens — "Kerala monsoon night"
    Forest-night surfaces · jasmine-cream text · kasavu-gold accent ·

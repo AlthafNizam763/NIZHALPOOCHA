@@ -61,15 +61,43 @@ npx cap open ios
 
 In Xcode: set your Team and bundle id under *Signing & Capabilities*, choose a device and Run.
 For TestFlight/App Store: *Product → Archive* → *Distribute App*.
-Orientation: in *General → Deployment Info* keep Portrait + Landscape enabled (the app locks
-landscape itself during matches).
+## Orientation
 
-## Google sign-in on native
+The apps are landscape-only, from the sign-in screen onwards: Android's activity uses
+`android:screenOrientation="sensorLandscape"`, the iPhone `Info.plist` lists only the two landscape
+orientations, and `services/orientation.ts` re-locks landscape at start-up. Phone browsers cannot
+lock orientation, so the sign-in screens and the match show a "rotate your device" prompt in
+portrait (tablets can still sign in in portrait).
 
-Firebase's popup sign-in only works in browsers. The native apps currently offer email/password
-and guest sign-in and show a clear message for Google. Adding native Google sign-in needs a native
-plugin (e.g. `@capacitor-firebase/authentication`) plus SHA-1/SHA-256 fingerprints (Android) and the
-reversed client id URL scheme (iOS).
+## Google sign-in
+
+**Everywhere (one-time, Firebase console):** *Authentication → Sign-in method → Add new provider →
+Google → Enable*, and pick a support email. Until this is done every Google attempt fails with
+`auth/operation-not-allowed`. For web testing from another device (e.g. `http://192.168.x.x:3000`)
+also add that host under *Authentication → Settings → Authorized domains*.
+
+**Browsers** use Firebase's popup (falling back to a redirect when popups are blocked).
+
+**Native apps** use `@capacitor-firebase/authentication` (system Google account picker) with
+`skipNativeAuth: true`; the returned ID token signs in the Firebase JS SDK, so sessions, profiles and
+the game server work exactly as on the web. The plugin needs Firebase's native config file and is
+only synced into a platform once that file exists (see `capacitor.config.ts`) — without it the app
+shows "Google sign-in isn't set up in this version" instead of crashing.
+
+Android:
+1. Firebase console → *Project settings → Your apps → Add app → Android*, package name
+   **`com.nizhalpoocha.game`** (a `google-services.json` from another package will not work).
+2. Add the SHA-1 and SHA-256 of every key that signs the APK. Debug key:
+   `keytool -list -v -keystore %USERPROFILE%\.android\debug.keystore -alias androiddebugkey -storepass android`
+   Release/Play: add your upload key's fingerprints and Play Console's *App signing key* fingerprints.
+3. Download `google-services.json` into `web/android/app/`, then `npx cap sync android` and rebuild.
+   (`rgcfaIncludeGoogle = true` in `android/variables.gradle` already pulls in the Google SDK.)
+
+A `DEVELOPER_ERROR` / "10:" in logcat means the signing fingerprint is not registered.
+
+iOS: add an iOS app in Firebase with the bundle id, put `GoogleService-Info.plist` in
+`web/ios/App/App/`, add its `REVERSED_CLIENT_ID` as a URL scheme (Xcode → *Info → URL Types*), then
+`npx cap sync ios`.
 
 ## App icon & splash
 
