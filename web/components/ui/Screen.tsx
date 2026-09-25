@@ -16,6 +16,7 @@ export function Screen({
   back,
   onBack,
   actions,
+  footer,
   children,
   wide,
 }: {
@@ -24,6 +25,9 @@ export function Screen({
   back?: string;
   onBack?: () => void;
   actions?: ReactNode;
+  /** Pinned bottom action bar (e.g. the screen's main button). Rendered outside the
+   *  animated content: an animated transform would otherwise capture 'position: fixed'. */
+  footer?: ReactNode;
   children: ReactNode;
   wide?: boolean;
 }) {
@@ -55,8 +59,13 @@ export function Screen({
             {actions}
           </header>
         )}
-        <div className="animate-screen-in">{children}</div>
+        <div className={`animate-screen-in ${footer ? 'pb-24' : ''}`}>{children}</div>
       </div>
+      {footer && (
+        <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-ink via-ink/90 to-transparent px-4 pt-8 pb-safe">
+          <div className={`mx-auto w-full ${wide ? 'max-w-5xl' : 'max-w-xl'} pb-3`}>{footer}</div>
+        </div>
+      )}
     </div>
   );
 }

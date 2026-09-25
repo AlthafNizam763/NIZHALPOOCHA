@@ -1,7 +1,7 @@
 'use client';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GAME, catLimitsFor, isInMatch, type Appearance, type RoomSettings } from '@nizhal/shared';
+import { GAME, effectiveCatCountFor, isInMatch, isValidCatCountFor, type Appearance } from '@nizhal/shared';
 import { useAuth } from '@/state/authStore';
 import { useRoom } from '@/state/roomStore';
 import { useGame } from '@/state/gameStore';
@@ -14,22 +14,25 @@ import { rooms, errorKey, type NetResult } from '@/services/net';
 import { saveProfile } from '@/services/profile';
 import { Screen } from '@/components/ui/Screen';
 import { Button, IconButton } from '@/components/ui/Button';
-import { Badge, Modal, Panel, SectionTitle } from '@/components/ui/Controls';
+import { Badge, Modal, Panel } from '@/components/ui/Controls';
 import { Notice } from '@/components/ui/Feedback';
 import { CharacterAvatar } from '@/components/ui/CharacterAvatar';
-import { SettingsForm, MapPreview } from '@/components/lobby/SettingsForm';
+import { RoomSummary } from '@/components/lobby/SettingsForm';
 import { CustomizePanel } from '@/components/lobby/CustomizePanel';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { VoiceBadge, VoiceControls } from '@/components/voice/VoiceControls';
 
-/** One line of the compact settings summary (phones / tablets). */
-function SummaryTile({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="min-w-0 rounded-xl border-[1.5px] border-line bg-ink/50 px-3 py-2">
-      <div className="text-[11px] font-semibold uppercase leading-tight tracking-wide text-rain">{label}</div>
-      <div className="font-display text-base font-bold leading-tight text-paper">{children}</div>
-    </div>
-  );
+/** The cat count the host picked on Create Room, remembered per room for this tab. */
+function desiredCats(code: string, current: number): number {
+  const key = `nz-desired-cats:${code}`;
+  try {
+    const saved = Number(sessionStorage.getItem(key));
+    if (saved > 0) return saved;
+    sessionStorage.setItem(key, String(current));
+  } catch {
+    /* storage unavailable: fall back to the room's current value */
+  }
+  return current;
 }
 
 export default function LobbyPage() {
@@ -45,9 +48,21 @@ export default function LobbyPage() {
   const hasMatchState = useGame((s) => !!s.state);
   const toast = useUi((s) => s.toast);
   const [customize, setCustomize] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const syncing = useRef<number | null>(null);
+
+  // Cats were chosen for the room on Create Room. As players join or leave, the host keeps
+  // the count within what this table allows (same rule the server enforces at start),
+  // aiming for the host's original pick. Only an actual change is sent to the server.
+  const host = room && user && room.hostId === user.uid && (room.phase === 'WAITING' || room.phase === 'LOBBY') ? room : null;
+  const hostTable = host ? Math.max(GAME.MIN_PLAYERS, host.players.length) : 0;
+  const hostTarget = host ? effectiveCatCountFor(host.settings.mode, hostTable, desiredCats(host.code, host.settings.catCount)) : 0;
+  useEffect(() => {
+    if (!host || host.settings.catCount === hostTarget || syncing.current === hostTarget) return;
+    syncing.current = hostTarget;
+    void rooms.settings({ catCount: hostTarget }).finally(() => (syncing.current = null));
+  }, [host, hostTarget]);
 
   if (!ready || !user) return <LoadingScreen messageKey="loading.session" />;
   if (!room) return <LoadingScreen messageKey="loading.room" />;
@@ -56,8 +71,8 @@ export default function LobbyPage() {
   const isHost = room.hostId === user.uid;
   const count = room.players.length;
   const everyoneReady = room.players.every((p) => p.isHost || p.ready);
-  const lim = catLimitsFor(room.settings.mode, Math.max(GAME.MIN_PLAYERS, count));
-  const catsValid = room.settings.catCount >= lim.min && room.settings.catCount <= lim.max;
+  const catsValid = isValidCatCountFor(room.settings.mode, Math.max(GAME.MIN_PLAYERS, count), room.settings.catCount);
+  const catsAdjusted = count >= GAME.MIN_PLAYERS && room.settings.catCount !== desiredCats(room.code, room.settings.catCount);
   const canStart = isHost && count >= GAME.MIN_PLAYERS && everyoneReady && catsValid && room.phase === 'LOBBY';
   const countdown = room.phase === 'STARTING' && room.countdownEndsAt ? Math.max(0, Math.ceil((room.countdownEndsAt - serverNow()) / 1000)) : null;
   const matchRunningWithoutMe = isInMatch(room.phase) && !hasMatchState;
@@ -125,6 +140,26 @@ export default function LobbyPage() {
     <Screen
       wide
       title={t('lobby.title')}
+      footer={
+        <div className="space-y-1.5 lg:ml-auto lg:max-w-[340px]">
+          {isHost && !everyoneReady && count >= GAME.MIN_PLAYERS && <p className="text-center text-xs leading-tight text-mist">{t('lobby.needReady')}</p>}
+          {isHost ? (
+            <Button variant="gold" size="lg" full disabled={!canStart} onClick={() => void act(rooms.start())}>
+              {t('lobby.start')}
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              full
+              variant={me?.ready ? 'secondary' : 'primary'}
+              onClick={() => void act(rooms.ready(!me?.ready))}
+              disabled={room.phase === 'STARTING' || matchRunningWithoutMe}
+            >
+              {me?.ready ? t('lobby.cancelReady') : t('lobby.imReady')}
+            </Button>
+          )}
+        </div>
+      }
       onBack={() => void rooms.leave().then(() => router.replace('/home'))}
       actions={
         <div className="flex shrink-0 items-center gap-2">
@@ -232,75 +267,22 @@ export default function LobbyPage() {
         </div>
 
         <div className="space-y-3">
-          <Panel className="hidden px-4 pb-2 pt-4 lg:block">
-            <SectionTitle>{t('lobby.settings')}</SectionTitle>
-            {!isHost && (
-              <Notice tone="info" className="mb-1 text-xs">
-                {t('lobby.hostOnly')}
-              </Notice>
-            )}
-            <SettingsForm
-              value={room.settings}
-              playerCount={count}
-              disabled={!isHost || room.phase === 'STARTING'}
-              onChange={(patch: Partial<RoomSettings>) => void act(rooms.settings(patch))}
-            />
-          </Panel>
-
-          <Panel className="p-3 lg:hidden">
-            <div className="flex items-center gap-3">
-              <MapPreview mapId={room.settings.mapId} className="h-14 w-18 shrink-0" />
-              <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
-                <SummaryTile label={t('settings.room.map')}>{t(`map.${room.settings.mapId}`)}</SummaryTile>
-                <SummaryTile label={t('settings.room.mode')}>{t(`mode.${room.settings.mode}`)}</SummaryTile>
-                <SummaryTile label={t('settings.room.catCount')}>{room.settings.catCount}</SummaryTile>
-                <SummaryTile label={t('settings.room.maxPlayers')}>{room.settings.maxPlayers}</SummaryTile>
-              </div>
-            </div>
+          <Panel className="p-3">
+            <RoomSummary settings={room.settings} />
           </Panel>
 
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-            <Button variant="secondary" className="lg:hidden" onClick={() => setSettingsOpen(true)}>
-              {t('lobby.settings')}
-            </Button>
-            <Button variant="secondary" onClick={() => setCustomize(true)} disabled={room.phase === 'STARTING'}>
+            <Button variant="secondary" className="col-span-2 lg:col-span-1" onClick={() => setCustomize(true)} disabled={room.phase === 'STARTING'}>
               {t('lobby.customize')}
             </Button>
-            {isHost ? (
-              <Button variant="gold" size="lg" className="col-span-2 lg:col-span-1" disabled={!canStart} onClick={() => void act(rooms.start())}>
-                {t('lobby.start')}
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                className="col-span-2 lg:col-span-1"
-                variant={me?.ready ? 'secondary' : 'primary'}
-                onClick={() => void act(rooms.ready(!me?.ready))}
-                disabled={room.phase === 'STARTING' || matchRunningWithoutMe}
-              >
-                {me?.ready ? t('lobby.cancelReady') : t('lobby.imReady')}
-              </Button>
-            )}
-            {isHost && !everyoneReady && count >= GAME.MIN_PLAYERS && (
-              <p className="col-span-2 text-center text-xs leading-tight text-rain lg:col-span-1">{t('lobby.needReady')}</p>
-            )}
-            {isHost && !catsValid && (
-              <Notice tone="danger" className="col-span-2 lg:col-span-1">
-                {t('err.INVALID_CONFIG')}
+            {isHost && catsAdjusted && (
+              <Notice tone="info" className="col-span-2 text-xs lg:col-span-1">
+                {t('lobby.catsAdjusted', { n: count, cats: room.settings.catCount })}
               </Notice>
             )}
           </div>
         </div>
       </div>
-
-      <Modal open={settingsOpen} onClose={() => setSettingsOpen(false)} title={t('lobby.settings')}>
-        {!isHost && (
-          <Notice tone="info" className="mb-2 text-xs">
-            {t('lobby.hostOnly')}
-          </Notice>
-        )}
-        <SettingsForm value={room.settings} playerCount={count} disabled={!isHost} onChange={(patch) => void act(rooms.settings(patch))} />
-      </Modal>
 
       <Modal open={customize} onClose={() => setCustomize(false)} title={t('custom.title')} wide>
         {profile && <CustomizePanel initialName={me?.name ?? profile.username} initial={me?.appearance ?? profile.appearance} onSave={(n, a) => void saveLook(n, a)} saving={saving} />}

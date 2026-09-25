@@ -5,6 +5,8 @@ export const ml: Partial<Record<I18nKey, string>> = {
   'app.tagline': 'എല്ലാവരും മനുഷ്യരെപ്പോലെ. എല്ലാവരും മനുഷ്യരല്ല.',
   'rooms.refresh': 'പുതുക്കുക',
   'set.account': 'അക്കൗണ്ട്',
+  'create.moreOptions': 'കൂടുതൽ ഓപ്ഷനുകൾ',
+  'lobby.catsAdjusted': '{n} പേരുള്ളതിനാൽ {cats} പൂച്ച(കൾ) കളിക്കും.',
   'kill.struck': 'ഇരുട്ടിൽ ഒരു ആക്രമണം',
   'kill.strike': 'ഒരു നിമിഷം മുഖംമൂടി വഴുതി…',
   'kill.caught': 'മഴയിൽ എന്തോ കാത്തിരിപ്പുണ്ടായിരുന്നു',

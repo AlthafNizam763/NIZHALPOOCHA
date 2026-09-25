@@ -398,6 +398,8 @@ export const en = {
 
   'rooms.refresh': 'Refresh',
   'set.account': 'Account',
+  'create.moreOptions': 'More options',
+  'lobby.catsAdjusted': 'With {n} players, {cats} Cat(s) will play.',
   'kill.struck': 'Struck in the dark',
   'kill.strike': 'The mask slips for a moment…',
   'kill.caught': 'Something was waiting in the rain',
