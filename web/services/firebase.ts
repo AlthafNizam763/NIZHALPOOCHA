@@ -20,6 +20,7 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || undefined,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || undefined,
 };
 
 /**
@@ -61,6 +62,16 @@ export function fbDb(): Firestore {
     if (usingEmulators) connectFirestoreEmulator(db, emulatorHost, 8080);
   }
   return db;
+}
+
+/**
+ * Google Analytics. Browser-only and loaded lazily so it never runs during the static
+ * export; skipped under the emulators or when the browser doesn't support it.
+ */
+export async function initAnalytics(): Promise<void> {
+  if (!firebaseEnabled || usingEmulators || !firebaseConfig.measurementId || typeof window === 'undefined') return;
+  const { getAnalytics, isSupported } = await import('firebase/analytics');
+  if (await isSupported().catch(() => false)) getAnalytics(fbApp());
 }
 
 export function fbRtdb(): Database | null {

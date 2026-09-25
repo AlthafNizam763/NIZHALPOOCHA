@@ -9,6 +9,7 @@ import { initAuth } from '@/services/auth';
 import { connect, disconnect } from '@/services/net';
 import { audio } from '@/services/audio';
 import { setPresence } from '@/services/presence';
+import { initAnalytics } from '@/services/firebase';
 import { isInMatch } from '@nizhal/shared';
 import { Toasts } from './ui/Feedback';
 import { ConnectionOverlay } from './ConnectionOverlay';
@@ -43,6 +44,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsub = initAuth();
     void setupNative();
+    void initAnalytics().catch(() => {});
     const unlock = () => audio.unlock();
     window.addEventListener('pointerdown', unlock, { passive: true });
     window.addEventListener('keydown', unlock);
