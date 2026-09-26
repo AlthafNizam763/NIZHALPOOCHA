@@ -28,7 +28,12 @@ const firebaseConfig = {
  * config is ever used here — admin credentials live on the game server only.
  */
 const emulatorHost = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_HOST || '';
-export const usingEmulators = emulatorHost.length > 0;
+/**
+ * The emulators only speak plain HTTP, which an HTTPS page can't reach (mixed content), so a
+ * stray emulator host in a deployed build is ignored instead of breaking every Firebase call.
+ */
+export const usingEmulators =
+  emulatorHost.length > 0 && (typeof window === 'undefined' || window.location.protocol === 'http:');
 
 /** When false the app runs in local dev mode (dev identities, no persistence). */
 export const firebaseEnabled = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
