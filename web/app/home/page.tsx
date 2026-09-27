@@ -367,9 +367,9 @@ export default function HomePage() {
                 {t('conn.connecting')}
               </div>
             )}
-            {profileSync !== 'ok' && (
+            {profileSync === 'offline' && (
               <p className="surface rounded-2xl border-lamp/40 p-2.5 text-xs text-lamp" role="status">
-                {t(profileSync === 'denied' ? 'profile.syncDenied' : 'profile.syncOffline')}
+                {t('profile.syncOffline')}
               </p>
             )}
             {user.isDev && <p className="surface rounded-2xl border-lamp/40 p-2.5 text-xs text-lamp [@media(max-height:480px)]:hidden">{t('common.devMode')}</p>}

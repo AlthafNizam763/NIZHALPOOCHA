@@ -232,7 +232,6 @@ export const ml: Partial<Record<I18nKey, string>> = {
   'end.backToLobby': 'ലോബിയിലേക്ക്',
 
   'profile.title': 'പ്രൊഫൈൽ',
-  'profile.syncDenied': 'പുരോഗതി സേവ് ചെയ്യപ്പെടുന്നില്ല: ഈ Firebase പ്രോജക്റ്റിന്റെ നിയമങ്ങൾ അനുവദിക്കുന്നില്ല. കളിക്കാം.',
   'profile.syncOffline': 'Firestore ലഭ്യമല്ല — ഇപ്പോൾ പുരോഗതി സേവ് ചെയ്യപ്പെടുന്നില്ല.',
   'profile.games': 'കളിച്ച മത്സരങ്ങൾ',
   'profile.wins': 'വിജയങ്ങൾ',

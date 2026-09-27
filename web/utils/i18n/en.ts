@@ -332,7 +332,6 @@ export const en = {
   'summary.notSaved': 'Dev mode — stats are not saved.',
 
   'profile.title': 'Profile',
-  'profile.syncDenied': "Progress isn't being saved: this Firebase project's Firestore rules don't allow Muchiri's data yet. You can still play.",
   'profile.syncOffline': "Couldn't reach Firestore — progress isn't being saved right now.",
   'profile.username': 'Username',
   'profile.level': 'Level',
