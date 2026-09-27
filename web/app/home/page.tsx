@@ -289,9 +289,9 @@ export default function HomePage() {
           <RailTile label={t('home.profile')} onClick={() => router.push('/profile')}>
             <CharacterAvatar appearance={profile.appearance} size={44} />
           </RailTile>
-          <RailTile label={t('home.leaderboard')} onClick={() => router.push('/leaderboard')}>
+          {/* <RailTile label={t('home.leaderboard')} onClick={() => router.push('/leaderboard')}>
             <IconTrophy className="h-8 w-8 text-lamp" />
-          </RailTile>
+          </RailTile> */}
           <RailTile label={t('story.title')} onClick={() => router.push('/story')}>
             <IconMoon className="h-8 w-8 text-lamp" />
           </RailTile>
