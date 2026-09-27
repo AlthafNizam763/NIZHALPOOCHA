@@ -60,7 +60,10 @@ export default function LeaderboardPage() {
     setFailed(false);
     leaderboard(metric)
       .then(setRows)
-      .catch(() => setFailed(true));
+      .catch((e) => {
+        console.error('[leaderboard]', e);
+        setFailed(true);
+      });
   }, [tab, metric]);
 
   if (!ready) return null;
