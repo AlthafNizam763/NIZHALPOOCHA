@@ -18,7 +18,11 @@ import { fileURLToPath } from 'node:url';
 import { SPOKEN_KEYS, spokenText } from '../utils/i18n/narration';
 import type { Lang } from '../utils/i18n';
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'voice');
+const WEB = join(dirname(fileURLToPath(import.meta.url)), '..');
+const OUT = join(WEB, 'public', 'voice');
+
+// Keys may also live in web/.env.local (never shipped: only NEXT_PUBLIC_* vars reach the app).
+if (existsSync(join(WEB, '.env.local'))) process.loadEnvFile(join(WEB, '.env.local'));
 const args = new Set(process.argv.slice(2));
 const argLang = [...args].find((a) => a.startsWith('--lang='))?.slice(7) as Lang | undefined;
 const LANGS: Lang[] = argLang ? [argLang] : ['ml', 'en'];

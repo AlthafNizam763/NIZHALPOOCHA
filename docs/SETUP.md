@@ -136,6 +136,9 @@ Narration (story intro, recap, tutorial) plays recorded clips from `web/public/v
 `web/public/voice/manifest.json`. Lines without a clip fall back to the device's text-to-speech. Most
 desktop browsers have no Malayalam voice, so ship clips for Malayalam (the default narration language).
 
+The keys can also go in `web/.env.local` (`AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`); the script
+loads that file. Commit the generated `web/public/voice/` so every build ships the clips.
+
 ```bash
 # Neural voices (free tiers cover the whole script, ~53 lines per language)
 AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=centralindia npm run voice:generate -w web   # ml-IN-MidhunNeural
