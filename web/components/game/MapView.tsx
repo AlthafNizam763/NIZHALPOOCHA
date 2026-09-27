@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { cameraPosition, getMap, getMode, repairStationsFor, type GameMapDef } from '@nizhal/shared';
+import { cameraPosition, getMap, getMode, repairStationsFor, type GameMapDef } from '@muchiri/shared';
 import { useGame } from '@/state/gameStore';
 import { serverNow } from '@/state/connectionStore';
 import { useT } from '@/hooks/useT';

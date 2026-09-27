@@ -1,4 +1,4 @@
-import type { ServerToClientEvents } from '@nizhal/shared';
+import type { ServerToClientEvents } from '@muchiri/shared';
 
 /**
  * Transport abstraction the match engine uses to talk to players. The socket

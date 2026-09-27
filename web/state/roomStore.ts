@@ -1,6 +1,6 @@
 'use client';
 import { create } from 'zustand';
-import type { RoomSnapshot } from '@nizhal/shared';
+import type { RoomSnapshot } from '@muchiri/shared';
 
 interface RoomState {
   room: RoomSnapshot | null;

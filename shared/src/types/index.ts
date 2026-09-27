@@ -1,9 +1,9 @@
 import type { Appearance } from '../constants/appearance';
-import type { Phase } from '../game-rules/phases';
-import type { Role, Team } from '../game-rules/roles';
-import type { RoomSettings } from '../game-rules/settings';
-import type { SabotageType } from '../game-rules/sabotage';
-import type { TaskAssignment } from '../game-rules/tasks';
+import type { Phase } from '../rules/phases';
+import type { Role, Team } from '../rules/roles';
+import type { RoomSettings } from '../rules/settings';
+import type { SabotageType } from '../rules/sabotage';
+import type { TaskAssignment } from '../rules/tasks';
 
 // ── Errors ────────────────────────────────────────────────────────────────
 export const ERROR_CODES = [

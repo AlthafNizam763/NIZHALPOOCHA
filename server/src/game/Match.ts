@@ -48,7 +48,7 @@ import {
   type VoteResult,
   type WinReason,
   type WinResult,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import type { Clock, TimerHandle } from '../utils/clock';
 import { createLogger } from '../utils/logger';
 import { secureShuffle, shortId, uid } from '../utils/random';

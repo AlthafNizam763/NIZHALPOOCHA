@@ -1,6 +1,6 @@
-import type { TaskType } from '../game-rules/tasks';
-import type { SabotageType } from '../game-rules/sabotage';
-import type { GameMode, MapId } from '../game-rules/settings';
+import type { TaskType } from '../rules/tasks';
+import type { SabotageType } from '../rules/sabotage';
+import type { GameMode, MapId } from '../rules/settings';
 
 export interface Rect {
   x: number;

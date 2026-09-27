@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_APPEARANCE, GAME, voiceChannelFor, type RoleInfo, type VoiceRoster, type VoiceSignal } from '@nizhal/shared';
+import { DEFAULT_APPEARANCE, GAME, voiceChannelFor, type RoleInfo, type VoiceRoster, type VoiceSignal } from '@muchiri/shared';
 import { RoomManager } from '../src/rooms/RoomManager';
 import type { Room } from '../src/rooms/Room';
 import { ManualClock, RecordingOutbox } from './helpers';

@@ -1,5 +1,5 @@
-import type { CatLimits } from '../game-rules/roles';
-import type { GameMode, PartialRoomSettings, RoomSettings } from '../game-rules/settings';
+import type { CatLimits } from '../rules/roles';
+import type { GameMode, PartialRoomSettings, RoomSettings } from '../rules/settings';
 import { GAME } from '../constants/game';
 import { getMap } from '../maps';
 import type { GameMapDef } from '../maps/types';

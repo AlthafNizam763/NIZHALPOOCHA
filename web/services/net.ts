@@ -10,7 +10,7 @@ import {
   type ResumePayload,
   type RoomSnapshot,
   type ServerToClientEvents,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import { useConnection } from '@/state/connectionStore';
 import { useRoom } from '@/state/roomStore';
 import { useGame } from '@/state/gameStore';
@@ -20,7 +20,7 @@ import { bridge } from '@/game/bridge';
 import { audio } from './audio';
 import { socketCredentials } from './auth';
 import { t } from '@/hooks/useT';
-import type { VoiceSignal } from '@nizhal/shared';
+import type { VoiceSignal } from '@muchiri/shared';
 import { voice } from './voice';
 
 type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;

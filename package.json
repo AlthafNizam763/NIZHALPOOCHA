@@ -1,8 +1,8 @@
 {
-  "name": "nizhalpoocha",
+  "name": "muchiri",
   "private": true,
   "version": "0.1.0",
-  "description": "Nizhalpoocha — a hidden-role multiplayer mystery set in monsoon Kerala.",
+  "description": "Muchiri — a hidden-role multiplayer mystery set in monsoon Kerala.",
   "workspaces": [
     "shared",
     "server",
@@ -16,7 +16,7 @@
     "test": "npm run test -w server",
     "build": "npm run build -w server && npm run build -w web",
     "sim": "npm run sim -w server",
-    "emulators": "firebase emulators:start --project demo-nizhalpoocha --only auth,firestore,database"
+    "emulators": "firebase emulators:start --project demo-muchiri --only auth,firestore,database,storage"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { GAME, SABOTAGE_DEFS, TASK_DEFS, type MinigameKind } from '@nizhal/shared';
+import { GAME, SABOTAGE_DEFS, TASK_DEFS, type MinigameKind } from '@muchiri/shared';
 import { useGame } from '@/state/gameStore';
 import { useUi } from '@/state/uiStore';
 import { useT } from '@/hooks/useT';

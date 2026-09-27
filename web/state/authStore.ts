@@ -1,6 +1,6 @@
 'use client';
 import { create } from 'zustand';
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 
 export interface AuthUser {
   uid: string;

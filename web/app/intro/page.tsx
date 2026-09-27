@@ -73,8 +73,8 @@ export default function IntroPage() {
       <div className="animate-screen-in relative my-auto flex w-full max-w-md flex-col items-center gap-5 [@media(max-height:480px)]:gap-2.5">
         <p className="font-display text-sm font-bold uppercase leading-tight tracking-[0.3em] text-lamp">{t('intro.prerollTitle')}</p>
         <div>
-          <h1 className="headline text-5xl leading-none text-paper max-[380px]:text-4xl sm:text-6xl [@media(max-height:480px)]:text-4xl">NIZHALPOOCHA</h1>
-          <span className="headline mt-1 block text-3xl leading-tight text-lamp [@media(max-height:480px)]:text-2xl">നിഴൽപ്പൂച്ച</span>
+          <h1 className="headline text-5xl leading-none text-paper max-[380px]:text-4xl sm:text-6xl [@media(max-height:480px)]:text-4xl">MUCHIRI</h1>
+          <span className="headline mt-1 block text-3xl leading-tight text-lamp [@media(max-height:480px)]:text-2xl">മുച്ചിരി</span>
           <div aria-hidden className="mt-2 flex justify-center gap-1.5">
             <span className="h-[3px] w-10 rounded-full bg-lamp" />
             <span className="h-[3px] w-3 rounded-full bg-gold-deep" />

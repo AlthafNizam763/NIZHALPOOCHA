@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_APPEARANCE, GAME, type RoomSnapshot } from '@nizhal/shared';
+import { DEFAULT_APPEARANCE, GAME, type RoomSnapshot } from '@muchiri/shared';
 import { RoomManager } from '../src/rooms/RoomManager';
 import { ManualClock, RecordingOutbox } from './helpers';
 

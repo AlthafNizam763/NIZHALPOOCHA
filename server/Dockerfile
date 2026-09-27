@@ -1,5 +1,5 @@
 # Build from the repository root:
-#   docker build -f server/Dockerfile -t nizhalpoocha-server .
+#   docker build -f server/Dockerfile -t muchiri-server .
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.base.json ./

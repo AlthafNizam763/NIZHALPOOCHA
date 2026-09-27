@@ -10,7 +10,7 @@ import { connect, disconnect } from '@/services/net';
 import { audio } from '@/services/audio';
 import { setPresence } from '@/services/presence';
 import { initAnalytics } from '@/services/firebase';
-import { isInMatch } from '@nizhal/shared';
+import { isInMatch } from '@muchiri/shared';
 import { Toasts } from './ui/Feedback';
 import { ConnectionOverlay } from './ConnectionOverlay';
 import { lockLandscape } from '@/services/orientation';

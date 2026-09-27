@@ -1,4 +1,4 @@
-import type { VoteResult } from '@nizhal/shared';
+import type { VoteResult } from '@muchiri/shared';
 
 export type VoteMap = ReadonlyMap<string, string | 'skip'>;
 

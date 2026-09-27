@@ -4,9 +4,9 @@ import '@/styles/globals.css';
 import { AppProviders } from '@/components/AppProviders';
 
 export const metadata: Metadata = {
-  title: 'Nizhalpoocha — Everyone looks human. Not everyone is.',
+  title: 'Muchiri — Everyone looks human. Not everyone is.',
   description: 'A hidden-role multiplayer mystery set in the Kerala town of Kadalimukku on a rainy monsoon night.',
-  applicationName: 'Nizhalpoocha',
+  applicationName: 'Muchiri',
   icons: { icon: '/icon.svg' },
 };
 

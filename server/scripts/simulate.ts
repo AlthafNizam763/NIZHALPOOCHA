@@ -25,7 +25,7 @@ import {
   type RoomSnapshot,
   type SelfState,
   type ResumePayload,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 
 const URL = process.env.SIM_URL ?? 'http://localhost:4000';
 const MAP = getMap('kadalimukku_old_town');

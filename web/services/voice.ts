@@ -1,5 +1,5 @@
 'use client';
-import { C2S, type VoiceJoinResult, type VoiceRoster, type VoiceSignal } from '@nizhal/shared';
+import { C2S, type VoiceJoinResult, type VoiceRoster, type VoiceSignal } from '@muchiri/shared';
 import { useVoice, type VoiceError } from '@/state/voiceStore';
 import { useSettings } from '@/state/settingsStore';
 import { useAuth } from '@/state/authStore';

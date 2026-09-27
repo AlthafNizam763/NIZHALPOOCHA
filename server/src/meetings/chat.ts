@@ -1,4 +1,4 @@
-import { GAME, QUICK_CHAT_IDS } from '@nizhal/shared';
+import { GAME, QUICK_CHAT_IDS } from '@muchiri/shared';
 
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g;

@@ -50,7 +50,7 @@ async function azure(lang: Lang, text: string): Promise<Buffer> {
       'Ocp-Apim-Subscription-Key': key,
       'Content-Type': 'application/ssml+xml',
       'X-Microsoft-OutputFormat': 'audio-24khz-96kbitrate-mono-mp3',
-      'User-Agent': 'nizhalpoocha-narration',
+      'User-Agent': 'muchiri-narration',
     },
     body: ssml,
   });

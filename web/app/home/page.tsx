@@ -2,7 +2,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
-import { levelFromXp, type Appearance } from '@nizhal/shared';
+import { levelFromXp, type Appearance } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useConnection } from '@/state/connectionStore';
 import { useSettings } from '@/state/settingsStore';

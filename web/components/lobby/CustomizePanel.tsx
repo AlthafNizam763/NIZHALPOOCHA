@@ -10,7 +10,7 @@ import {
   TOP_STYLES,
   randomAppearance,
   type Appearance,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import { useT } from '@/hooks/useT';
 import type { I18nKey } from '@/utils/i18n';
 import { Button } from '@/components/ui/Button';

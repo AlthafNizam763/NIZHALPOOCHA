@@ -1,4 +1,4 @@
-package com.nizhalpoocha.game;
+package com.muchiri.game;
 
 import com.getcapacitor.BridgeActivity;
 

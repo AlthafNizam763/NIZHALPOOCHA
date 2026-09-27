@@ -17,7 +17,7 @@ import {
   type MapPalette,
   type PositionSnapshot,
   type Rect,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import { useGame, sameActions, NO_ACTIONS, type ProximityActions } from '@/state/gameStore';
 import { useSettings } from '@/state/settingsStore';
 import { serverNow } from '@/state/connectionStore';

@@ -1,7 +1,7 @@
 /** English strings. Keys are the single source of truth for every UI string. */
 export const en = {
-  'app.name': 'Nizhalpoocha',
-  'app.nameNative': 'നിഴൽപ്പൂച്ച',
+  'app.name': 'Muchiri',
+  'app.nameNative': 'മുച്ചിരി',
   'app.tagline': 'Everyone looks human. Not everyone is.',
   'app.town': 'Kadalimukku',
 
@@ -73,7 +73,7 @@ export const en = {
   'home.leaderboard': 'Leaderboard',
   'home.level': 'Level {n}',
   'home.story':
-    'For several nights the street lights of Kadalimukku have failed, the pumps have stopped and people have gone missing. The old ones whisper of the Nizhalpoocha — a shadow that wears a human face.',
+    'For several nights the street lights of Kadalimukku have failed, the pumps have stopped and people have gone missing. The old ones whisper of the Muchiri — a shadow that wears a human face.',
 
   'create.title': 'Create Room',
   'create.submit': 'Create room',
@@ -92,7 +92,7 @@ export const en = {
   'home.customize': 'Customize character',
   'home.language': 'Language',
   'home.sound': 'Sound on/off',
-  'howto.intro': 'A few people in Kadalimukku are not what they seem. One or more players are secretly the Nizhalpoocha — a Cat that looks exactly like everyone else.',
+  'howto.intro': 'A few people in Kadalimukku are not what they seem. One or more players are secretly the Muchiri — a Cat that looks exactly like everyone else.',
   'howto.humansTitle': 'Humans: repair the town',
   'howto.humans': 'Walk to your tasks (yellow markers), finish the small repairs, and keep an eye on who goes where. Report any body you find.',
   'howto.catsTitle': 'Cats: blend in',
@@ -153,7 +153,7 @@ export const en = {
   'lobby.startingIn': 'Starting in {n}',
   'lobby.starting': 'Match starting',
   'lobby.hostOnly': 'Only the host can change settings.',
-  'lobby.shareText': 'Join my Nizhalpoocha room: {code}',
+  'lobby.shareText': 'Join my Muchiri room: {code}',
   'lobby.needReady': 'Everyone must be ready',
 
   'custom.title': 'Your character',
@@ -183,7 +183,7 @@ export const en = {
 
   'role.youAre': 'You are',
   'role.HUMAN': 'Human',
-  'role.CAT': 'Nizhalpoocha',
+  'role.CAT': 'Muchiri',
   'role.humanGoal': 'Finish your tasks, report what you find and vote out the Cats hiding among you.',
   'role.catGoal': 'Blend in. Sabotage the town, eliminate Humans in secret and avoid suspicion.',
   'role.fellowCats': 'Your fellow Cats',
@@ -304,7 +304,7 @@ export const en = {
   'end.reason.parity': 'The Cats outnumbered the Humans.',
   'end.reason.critical_sabotage': 'The pumps failed. The town flooded.',
   'end.reason.humans_left': 'No Humans remained.',
-  'end.revealTitle': 'The Nizhalpoocha revealed',
+  'end.revealTitle': 'The Muchiri revealed',
   'end.summary': 'Match summary',
   'end.duration': 'Duration',
   'end.backToLobby': 'Back to lobby',
@@ -332,7 +332,7 @@ export const en = {
   'summary.notSaved': 'Dev mode — stats are not saved.',
 
   'profile.title': 'Profile',
-  'profile.syncDenied': "Progress isn't being saved: this Firebase project's Firestore rules don't allow Nizhalpoocha's data yet. You can still play.",
+  'profile.syncDenied': "Progress isn't being saved: this Firebase project's Firestore rules don't allow Muchiri's data yet. You can still play.",
   'profile.syncOffline': "Couldn't reach Firestore — progress isn't being saved right now.",
   'profile.username': 'Username',
   'profile.level': 'Level',
@@ -480,7 +480,7 @@ export const en = {
   'intro.l8a': 'Umbrellas. Keys. A bicycle.',
   'intro.l8b': 'Things vanished — and left only wet footprints behind.',
   'intro.l9': 'At the old tharavad house, the elders spoke a name no one had said in years.',
-  'intro.l10a': 'Nizhalpoocha. The Shadow Cat.',
+  'intro.l10a': 'Muchiri. The Shadow Cat.',
   'intro.l10b': 'It steals a human face — and walks among people, wearing it as its own.',
   'intro.l11': 'Some say it has already come back.',
   'intro.l12': 'Five neighbours were at the junction the night the lights went out.',
@@ -509,7 +509,7 @@ export const en = {
   'recap.title': 'The story so far',
   'recap.1': 'Kadalimukku — a Kerala town, deep in the monsoon.',
   'recap.2': 'Night after night the power, the CCTV and the water pump fail. Things go missing.',
-  'recap.3': 'The Nizhalpoocha — a Cat that looks exactly human — is hiding among the townsfolk.',
+  'recap.3': 'The Muchiri — a Cat that looks exactly human — is hiding among the townsfolk.',
   'recap.4': 'As a Human: do your tasks, investigate, report, and vote the Cat out.',
   'recap.continue': 'Start the tutorial',
 
@@ -525,7 +525,7 @@ export const en = {
   'story.lore.town.body': 'A junction town on the Kerala coast where the canal meets the sea road: a tea shop, a school, the KSEB electrical room, a pump house and a bus stop where everyone meets.',
   'story.lore.incidents': 'The incidents',
   'story.lore.incidents.body': 'Power cuts at the same hour every night. CCTV that turns to static. A pump that stops by itself. Missing things — and wet pawprints where no cat was seen.',
-  'story.lore.legend': 'The Nizhalpoocha',
+  'story.lore.legend': 'The Muchiri',
   'story.lore.legend.body': 'Grandmothers tell of a shadow cat that borrows a human face. It walks, talks and laughs like the person it copies. Only its shadow sometimes forgets.',
   'story.lore.why': 'Why we investigate',
   'story.lore.why.body': 'Nobody from outside is coming in this rain. The townsfolk keep the lights on themselves, watch each other closely, and meet at the junction to decide who is not what they seem.',
@@ -578,7 +578,7 @@ export const en = {
   'tut.vote.wait': 'Waiting for the others to vote…',
   'tut.chat.rahul': 'I was at the tea shop the whole time. Ask Fathima.',
   'tut.chat.fathima': 'I closed the shop early… I didn’t see Rahul.',
-  'tut.result.caught': 'You found the Nizhalpoocha!',
+  'tut.result.caught': 'You found the Muchiri!',
   'tut.result.missed': 'The Cat slipped away this time.',
   'tut.result.missedHint': 'In a real match it would keep hunting. Trust what you saw, not what they say.',
   'tut.done.title': 'Tutorial complete',
@@ -645,7 +645,7 @@ export const en = {
 
   'infection.youInfected': 'You have been infected',
   'infection.turning': 'Turning in {n}s…',
-  'infection.turned': 'You are a Nizhalpoocha now. Infect the rest.',
+  'infection.turned': 'You are a Muchiri now. Infect the rest.',
   'infection.fellowJoined': 'A new Cat has joined you.',
   'objective.antidote': 'Antidote',
   'objective.antidotePart': 'Antidote part',

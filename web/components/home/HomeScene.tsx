@@ -1,5 +1,5 @@
 'use client';
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 import { CharacterAvatar } from '@/components/ui/CharacterAvatar';
 
 /**

@@ -1,4 +1,4 @@
-import type { GameMapDef, TaskAssignment } from '@nizhal/shared';
+import type { GameMapDef, TaskAssignment } from '@muchiri/shared';
 import { secureShuffle, shortId } from '../utils/random';
 
 /**

@@ -10,7 +10,7 @@
 | `web/game/` (Phaser) | World rendering, local movement prediction, remote interpolation, vision/darkness, weather, proximity detection. Created once per play screen (`GameCanvas`), never re-created on React renders. |
 | Firebase | Accounts (Auth), persistent profile/stats/matches/leaderboard (Firestore), presence (RTDB). **Never** live match state. |
 
-## Match state machine (`shared/src/game-rules/phases.ts`)
+## Match state machine (`shared/src/rules/phases.ts`)
 
 ```
 WAITING ⇄ LOBBY → STARTING → ROLE_REVEAL → PLAYING ⇄ (REPORT → MEETING → VOTING → RESULT) → FINISHED → LOBBY
@@ -76,7 +76,7 @@ Maps and modes are configured independently and combined per room (`RoomSettings
   parts), surveillance (CCTV cameras, patrol drones, security consoles), a visual theme, map rules (e.g.
   vision multiplier) and `supportedModes`. Every map is built with `createMapBuilder`, so collision rules are
   identical everywhere. Sabotages available on a map are derived from its stations.
-- **Modes** (`shared/src/game-modes/`): `ClassicMode`, `HuntMode`, `InfectionMode`, `FutureMode`. A
+- **Modes** (`shared/src/modes/`): `ClassicMode`, `HuntMode`, `InfectionMode`, `FutureMode`. A
   `GameModeDefinition` is data + pure rules: Cat limits, what a Cat's attack does (kill / infect), emergency
   meetings, vision and cooldown multipliers, survival clock, antidote objective, surveillance alerts, required
   map features and `evaluateWin`. `Match` reads these values — it never branches on map or mode ids.
@@ -164,5 +164,5 @@ Realtime Database: `status/{uid} = { state: online|in_lobby|in_game|offline, las
   or add one in `web/components/game/minigames`.
 - **New sabotage:** add to `SABOTAGE_TYPES`/`SABOTAGE_DEFS`, place stations for it on maps, and handle its
   effect in `Match`.
-- **New mode:** add a `GameModeDefinition` in `shared/src/game-modes/`, register it in `GAME_MODES` and the
+- **New mode:** add a `GameModeDefinition` in `shared/src/modes/`, register it in `GAME_MODES` and the
   mode registry, and list it in the `supportedModes` of the maps it suits.

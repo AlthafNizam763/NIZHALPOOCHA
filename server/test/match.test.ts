@@ -9,7 +9,7 @@ import {
   type GameStateView,
   type RoleInfo,
   type SelfState,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import { Match } from '../src/game/Match';
 import { ManualClock, RecordingOutbox, members } from './helpers';
 

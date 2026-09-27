@@ -3,7 +3,7 @@ import {
   HAIR_COLORS,
   SKIN_TONES,
   type Appearance,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 
 /**
  * Original stylised Kerala villager characters, drawn procedurally so the same

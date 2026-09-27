@@ -13,7 +13,7 @@ import {
   type SelfState,
   type VoteEntry,
   type VoteResult,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import { useGame } from '@/state/gameStore';
 import { useUi } from '@/state/uiStore';
 import { serverNow } from '@/state/connectionStore';

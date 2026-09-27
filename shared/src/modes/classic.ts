@@ -1,4 +1,4 @@
-import { catLimits } from '../game-rules/roles';
+import { catLimits } from '../rules/roles';
 import { countAlive, type GameModeDefinition, type WinInput, type WinResult } from './types';
 
 /** The original rules: find the Cats or finish the tasks; Cats win at parity. */

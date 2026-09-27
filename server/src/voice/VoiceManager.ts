@@ -1,4 +1,4 @@
-import { S2C, type VoiceChannel, type VoicePeer, type VoiceRoster, type VoiceSignal } from '@nizhal/shared';
+import { S2C, type VoiceChannel, type VoicePeer, type VoiceRoster, type VoiceSignal } from '@muchiri/shared';
 import type { Outbox } from '../game/outbox';
 
 export interface VoiceMember {

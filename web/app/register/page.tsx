@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { GAME } from "@nizhal/shared";
+import { GAME } from "@muchiri/shared";
 import { useT } from "@/hooks/useT";
 import { firebaseEnabled } from "@/services/firebase";
 import { authErrorKey, registerEmail } from "@/services/auth";

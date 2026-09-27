@@ -8,7 +8,7 @@ import {
   type ClientToServerEvents,
   type ErrorCode,
   type ServerToClientEvents,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import type { RoomManager } from '../rooms/RoomManager';
 import type { SocketData } from '../auth/socketAuth';
 import { TokenBucket } from '../utils/rateLimit';

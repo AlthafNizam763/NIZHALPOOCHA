@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import express from 'express';
 import { Server } from 'socket.io';
-import type { ClientToServerEvents, ServerToClientEvents } from '@nizhal/shared';
+import type { ClientToServerEvents, ServerToClientEvents } from '@muchiri/shared';
 import { config } from './utils/config';
 import { createLogger } from './utils/logger';
 import { realClock } from './utils/clock';
@@ -51,7 +51,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.get('/', (_req, res) => {
-  res.type('text/plain').send('Nizhalpoocha game server');
+  res.type('text/plain').send('Muchiri game server');
 });
 
 http.listen(config.port, () => {

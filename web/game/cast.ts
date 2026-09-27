@@ -1,4 +1,4 @@
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 import type { I18nKey } from '@/utils/i18n';
 
 /**

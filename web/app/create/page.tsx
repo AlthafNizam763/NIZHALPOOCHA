@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { DEFAULT_SETTINGS, applySettingsPatch, catLimitsFor, type ErrorCode, type RoomSettings } from '@nizhal/shared';
+import { DEFAULT_SETTINGS, applySettingsPatch, catLimitsFor, type ErrorCode, type RoomSettings } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useT } from '@/hooks/useT';
 import { useRequireAuth, useRoomRedirect } from '@/hooks/useRoute';

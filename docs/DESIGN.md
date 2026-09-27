@@ -1,4 +1,4 @@
-# Nizhalpoocha — Visual System
+# Muchiri — Visual System
 
 One look for every screen: **a Kerala monsoon night**. Deep forest greens and wet
 darkness, lit by warm oil-lamp gold, with the kasavu (gold saree border) as our

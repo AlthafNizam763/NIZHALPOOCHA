@@ -89,24 +89,24 @@ At match end the server writes `matches`, `matchPlayers`, `users/{uid}.stats` an
 Requires `npm i -g firebase-tools` and Java 11+.
 
 ```bash
-npm run emulators      # Auth :9099 · Firestore :8080 · Realtime DB :9000, using the rules in firebase/
+npm run emulators      # Auth :9099 · Firestore :8080 · Realtime DB :9000 · Storage :9199, using the rules in firebase/
 ```
 
 `web/.env.local`:
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=demo-key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=demo-nizhalpoocha.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-nizhalpoocha
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=demo-muchiri.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-muchiri
 NEXT_PUBLIC_FIREBASE_APP_ID=demo-app
-NEXT_PUBLIC_FIREBASE_DATABASE_URL=http://127.0.0.1:9000?ns=demo-nizhalpoocha-default-rtdb
+NEXT_PUBLIC_FIREBASE_DATABASE_URL=http://127.0.0.1:9000?ns=demo-muchiri-default-rtdb
 NEXT_PUBLIC_FIREBASE_EMULATOR_HOST=127.0.0.1
 ```
 
 `server/.env`:
 
 ```
-FIREBASE_PROJECT_ID=demo-nizhalpoocha
+FIREBASE_PROJECT_ID=demo-muchiri
 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
 ALLOW_DEV_AUTH=false

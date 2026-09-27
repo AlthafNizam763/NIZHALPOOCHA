@@ -1,4 +1,4 @@
-import { randomAppearance, type ServerToClientEvents } from '@nizhal/shared';
+import { randomAppearance, type ServerToClientEvents } from '@muchiri/shared';
 import type { Clock, TimerHandle } from '../src/utils/clock';
 import type { Outbox } from '../src/game/outbox';
 

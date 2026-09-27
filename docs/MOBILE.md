@@ -1,7 +1,7 @@
 # Mobile builds (Capacitor)
 
 The same static Next.js export (`web/out`) runs inside Capacitor. Native projects live in
-`web/android` and `web/ios`. App id: `com.nizhalpoocha.game`.
+`web/android` and `web/ios`. App id: `com.muchiri.game`.
 
 Built in: landscape lock during gameplay (`@capacitor/screen-orientation`), portrait for menus,
 safe-area insets, dark status bar overlay, splash screen, hardware back button, keyboard without
@@ -41,7 +41,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Release AAB (Play Store):
 
-1. Create a keystore: `keytool -genkey -v -keystore nizhal-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias nizhal`
+1. Create a keystore: `keytool -genkey -v -keystore muchiri-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias muchiri`
 2. Open `web/android` in Android Studio → *Build → Generate Signed App Bundle*, **or** configure
    `signingConfigs` in `android/app/build.gradle` and run `./gradlew bundleRelease`
    (→ `app/build/outputs/bundle/release/app-release.aab`).
@@ -86,7 +86,7 @@ shows "Google sign-in isn't set up in this version" instead of crashing.
 
 Android:
 1. Firebase console → *Project settings → Your apps → Add app → Android*, package name
-   **`com.nizhalpoocha.game`** (a `google-services.json` from another package will not work).
+   **`com.muchiri.game`** (a `google-services.json` from another package will not work).
 2. Add the SHA-1 and SHA-256 of every key that signs the APK. Debug key:
    `keytool -list -v -keystore %USERPROFILE%\.android\debug.keystore -alias androiddebugkey -storepass android`
    Release/Play: add your upload key's fingerprints and Play Console's *App signing key* fingerprints.

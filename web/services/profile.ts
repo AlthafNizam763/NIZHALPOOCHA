@@ -11,7 +11,7 @@ import {
   setDoc,
   where,
 } from 'firebase/firestore';
-import { DEFAULT_APPEARANCE, randomAppearance, type Appearance } from '@nizhal/shared';
+import { DEFAULT_APPEARANCE, randomAppearance, type Appearance } from '@muchiri/shared';
 import {
   EMPTY_USER_STATS,
   NEW_PLAYER_ONBOARDING,

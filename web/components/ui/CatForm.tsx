@@ -1,5 +1,5 @@
 /**
- * The Nizhalpoocha's true form — an original shadow-cat silhouette with lamp-lit
+ * The Muchiri's true form — an original shadow-cat silhouette with lamp-lit
  * eyes. Only ever shown after a legitimate reveal (role reveal to the Cat
  * itself, confirmed ejection, or the end-of-match reveal).
  */

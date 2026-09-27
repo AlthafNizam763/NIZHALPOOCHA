@@ -1,4 +1,4 @@
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 import { audio } from '@/services/audio';
 import type { I18nKey } from '@/utils/i18n';
 import { CAST, type CastId } from '@/game/cast';
@@ -556,7 +556,7 @@ export const SHOTS: readonly Shot[] = [
     },
   },
 
-  // 10 ── The Nizhalpoocha legend, on palm-leaf manuscripts
+  // 10 ── The Muchiri legend, on palm-leaf manuscripts
   {
     id: 'legend',
     dur: 10,
@@ -606,7 +606,7 @@ export const SHOTS: readonly Shot[] = [
         c.fill();
       };
       leaf(260);
-      s.text('നിഴൽപ്പൂച്ച', 330, 280, 44, ink);
+      s.text('മുച്ചിരി', 330, 280, 44, ink);
       for (let i = 0; i < 5; i++) figure(700 + i * 120, 310, 1.2);
       leaf(460);
       for (let i = 0; i < 4; i++) figure(380 + i * 150, 510, 1.2);
@@ -893,8 +893,8 @@ export const SHOTS: readonly Shot[] = [
     draw: (s, t) => {
       s.fill('#040605', 1);
       const a = ramp(t, 0.9, 2.1);
-      s.text('NIZHALPOOCHA', 800, 440, 120, C.paper, { align: 'center', alpha: a, weight: 800 });
-      s.text('നിഴൽപ്പൂച്ച', 800, 530, 64, C.lamp, { align: 'center', alpha: a });
+      s.text('MUCHIRI', 800, 440, 120, C.paper, { align: 'center', alpha: a, weight: 800 });
+      s.text('മുച്ചിരി', 800, 530, 64, C.lamp, { align: 'center', alpha: a });
       const eyes = ramp(t, 2.2, 3) * (Math.floor(s.time * 1.3) % 5 === 0 ? 0.1 : 1);
       if (eyes > 0) {
         for (const ex of [770, 830]) {

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useT } from '@/hooks/useT';
 import { firebaseEnabled } from '@/services/firebase';

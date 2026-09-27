@@ -1,4 +1,4 @@
-import { catLimits } from '../game-rules/roles';
+import { catLimits } from '../rules/roles';
 import { classicWin } from './classic';
 import type { GameModeDefinition } from './types';
 

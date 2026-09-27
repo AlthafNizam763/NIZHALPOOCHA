@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, type ReactNode } from 'react';
-import { TASK_DEFS, getMap, getMode, type TaskAssignment } from '@nizhal/shared';
+import { TASK_DEFS, getMap, getMode, type TaskAssignment } from '@muchiri/shared';
 import { useGame, EMPTY_PLAYERS, EMPTY_TASKS } from '@/state/gameStore';
 import { useConnection, serverNow } from '@/state/connectionStore';
 import { useUi } from '@/state/uiStore';

@@ -1,4 +1,4 @@
-import type { Point, PositionSnapshot, Rect } from '@nizhal/shared';
+import type { Point, PositionSnapshot, Rect } from '@muchiri/shared';
 
 type SnapshotListener = (s: PositionSnapshot, receivedAt: number) => void;
 

@@ -9,7 +9,7 @@ import type {
   RoleInfo,
   SelfState,
   VoteResult,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 
 /** Context-sensitive actions available right now (computed by the Phaser scene). */
 export interface ProximityActions {

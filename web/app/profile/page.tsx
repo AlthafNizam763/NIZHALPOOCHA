@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
-import { levelFromXp, type Appearance } from '@nizhal/shared';
+import { levelFromXp, type Appearance } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useUi } from '@/state/uiStore';
 import { useT } from '@/hooks/useT';

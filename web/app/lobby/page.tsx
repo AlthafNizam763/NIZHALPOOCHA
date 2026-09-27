@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GAME, effectiveCatCountFor, isInMatch, isValidCatCountFor, type Appearance } from '@nizhal/shared';
+import { GAME, effectiveCatCountFor, isInMatch, isValidCatCountFor, type Appearance } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useRoom } from '@/state/roomStore';
 import { useGame } from '@/state/gameStore';

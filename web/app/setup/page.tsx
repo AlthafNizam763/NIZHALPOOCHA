@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useUi } from '@/state/uiStore';
 import { useT } from '@/hooks/useT';

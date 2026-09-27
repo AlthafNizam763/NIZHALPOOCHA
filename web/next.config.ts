@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   reactStrictMode: true,
   images: { unoptimized: true },
-  transpilePackages: ['@nizhal/shared'],
+  transpilePackages: ['@muchiri/shared'],
   devIndicators: false,
 };
 

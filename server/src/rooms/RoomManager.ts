@@ -6,7 +6,7 @@ import {
   type ErrorCode,
   type PartialRoomSettings,
   type PublicRoomSummary,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import type { Clock } from '../utils/clock';
 import { roomCode } from '../utils/random';
 import { createLogger } from '../utils/logger';

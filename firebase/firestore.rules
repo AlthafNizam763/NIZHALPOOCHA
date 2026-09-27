@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Firestore security rules for Nizhalpoocha.
+// Firestore security rules for Muchiri.
 // Live match state never lives in Firestore; the game server (Admin SDK, which
 // bypasses these rules) writes stats, match records and the leaderboard.
 service cloud.firestore {

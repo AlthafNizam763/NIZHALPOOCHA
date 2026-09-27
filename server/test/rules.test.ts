@@ -23,7 +23,7 @@ import {
   type GameMapDef,
   type Rect,
   type WinInput,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import { resolveVotes } from '../src/voting/resolveVotes';
 
 test('vote resolution: majority, tie, skip, none', () => {

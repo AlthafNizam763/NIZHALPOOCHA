@@ -1,4 +1,4 @@
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 import { appearanceKey, CHAR_H, CHAR_W, drawCharacter } from '@/game/art/character';
 
 /**

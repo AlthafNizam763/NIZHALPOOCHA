@@ -13,7 +13,7 @@ import {
   type RoleInfo,
   type RoomSettings,
   type SelfState,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import { Match, type MatchSummary } from '../src/game/Match';
 import { ManualClock, RecordingOutbox, members } from './helpers';
 

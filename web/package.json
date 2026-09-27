@@ -1,5 +1,5 @@
 {
-  "name": "@nizhal/web",
+  "name": "@muchiri/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,7 +23,7 @@
     "@capacitor/screen-orientation": "^8.0.0",
     "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
-    "@nizhal/shared": "0.1.0",
+    "@muchiri/shared": "0.1.0",
     "firebase": "^12.3.0",
     "next": "15.5.26",
     "phaser": "3.90.0",

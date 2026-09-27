@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SABOTAGE_DEFS, availableSabotages, getMap, getMode, type SabotageType } from '@nizhal/shared';
+import { SABOTAGE_DEFS, availableSabotages, getMap, getMode, type SabotageType } from '@muchiri/shared';
 import { useGame, EMPTY_PLAYERS } from '@/state/gameStore';
 import { useUi } from '@/state/uiStore';
 import { serverNow } from '@/state/connectionStore';

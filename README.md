@@ -1,18 +1,18 @@
-# Nizhalpoocha · നിഴൽപ്പൂച്ച
+# MUCHIRI · മുച്ചിരി
 
 > *Everyone looks human. Not everyone is.*
 
 A hidden-role multiplayer mystery set in **Kadalimukku**, a small Kerala town on a rainy monsoon night.
-5–15 players explore the town, repair it and investigate. One or more of them is secretly the
-**Nizhalpoocha** (the Cat): it looks exactly like everyone else, sabotages the town and eliminates
-Humans in secret.
+5–15 players explore the town, repair it and investigate. One or more of them is secretly an agent of
+**Muchiri**, the fifth guardian (the Cat): it looks exactly like everyone else, sabotages the town
+and eliminates Humans in secret.
 
 | Layer | Tech |
 | --- | --- |
 | App UI (menus, lobby, meeting, results) | Next.js 15 (static export) · React 19 · Tailwind CSS 4 · Zustand |
 | Gameplay rendering | Phaser 3.90 (procedural original art, no external assets) |
 | Multiplayer (authoritative) | Node.js · Socket.IO 4 · TypeScript |
-| Accounts & persistence | Firebase Auth · Firestore · Realtime Database (presence) · Storage rules |
+| Accounts & persistence | Firebase Auth · Firestore · Realtime Database (presence) · Storage (avatars) |
 | Mobile | Capacitor 8 (Android + iOS projects included) |
 
 ## Quick start (local, no Firebase needed)
@@ -22,6 +22,15 @@ npm install
 cp server/.env.example server/.env        # ALLOW_DEV_AUTH=true is already set for local dev
 npm run dev                               # server :4000 + web :3000
 ```
+
+Or run each side in its own terminal:
+
+```bash
+npm run dev:server                        # Socket.IO game server  → http://localhost:4000
+npm run dev:web                           # Next.js app            → http://localhost:3000
+```
+
+Optional: copy `web/.env.example` to `web/.env.local` and fill in the Firebase web config.
 
 Open <http://localhost:3000>, choose **Continue as guest**. Without Firebase keys the app runs in
 **local dev mode**: each browser tab gets its own dev identity, so you can open 5 tabs and play a full
@@ -63,7 +72,9 @@ See [docs/MILESTONES.md](docs/MILESTONES.md) for the milestone-by-milestone stat
 ## Repository layout
 
 ```
-shared/   types, typed socket events + zod schemas, constants, game rules, map data & collision
+shared/   src/types · src/events (typed socket events + zod schemas) · src/constants
+          src/maps (MapDefinition, 5 maps, collision) · src/modes (Classic/Hunt/Infection/Future)
+          src/rules (roles, settings, phases, tasks, sabotage, progression)
 server/   Socket.IO game server: auth, rooms, match engine, voting, persistence, tests, simulation
 web/      Next.js app (app/, components/, game/ [Phaser], services/, state/, hooks/, utils/)
           android/ & ios/ — Capacitor native projects

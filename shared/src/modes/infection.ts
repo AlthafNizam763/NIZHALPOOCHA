@@ -1,5 +1,5 @@
 import { GAME } from '../constants/game';
-import type { CatLimits } from '../game-rules/roles';
+import type { CatLimits } from '../rules/roles';
 import { countAlive, type GameModeDefinition } from './types';
 
 /** Up to half the room may start as Cats (6 players → up to 3 Cats). */

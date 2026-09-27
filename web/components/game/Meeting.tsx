@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { QUICK_CHAT_IDS, type GamePlayerView } from '@nizhal/shared';
+import { QUICK_CHAT_IDS, type GamePlayerView } from '@muchiri/shared';
 import { useGame } from '@/state/gameStore';
 import { useUi } from '@/state/uiStore';
 import { useAuth } from '@/state/authStore';

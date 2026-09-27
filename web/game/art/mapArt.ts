@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import type { Decoration, GameMapDef, Hazard, MapBuilding, MapPalette, Rect } from '@nizhal/shared';
+import type { Decoration, GameMapDef, Hazard, MapBuilding, MapPalette, Rect } from '@muchiri/shared';
 
 /**
  * Procedural, original art for every map. Everything is drawn from the shared

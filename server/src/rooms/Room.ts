@@ -17,7 +17,7 @@ import {
   type ResumePayload,
   type RoomSettings,
   type RoomSnapshot,
-} from '@nizhal/shared';
+} from '@muchiri/shared';
 import type { Clock, TimerHandle } from '../utils/clock';
 import { createLogger } from '../utils/logger';
 import { Match, type MatchSummary, type MatchTimings, type Result } from '../game/Match';

@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import type { ErrorCode } from '@nizhal/shared';
+import type { ErrorCode } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useT } from '@/hooks/useT';
 import { useRequireAuth, useRoomRedirect } from '@/hooks/useRoute';

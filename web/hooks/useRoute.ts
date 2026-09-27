@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { isInMatch } from '@nizhal/shared';
+import { isInMatch } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useRoom } from '@/state/roomStore';
 import { useGame } from '@/state/gameStore';

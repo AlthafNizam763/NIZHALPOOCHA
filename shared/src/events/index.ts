@@ -10,8 +10,8 @@ import {
   TOP_STYLES,
 } from '../constants/appearance';
 import { GAME } from '../constants/game';
-import { SABOTAGE_TYPES } from '../game-rules/sabotage';
-import { partialSettingsSchema } from '../game-rules/settings';
+import { SABOTAGE_TYPES } from '../rules/sabotage';
+import { partialSettingsSchema } from '../rules/settings';
 import type {
   AckFn,
   CameraFeed,
@@ -27,8 +27,8 @@ import type {
   VoteResult,
   ErrorCode,
 } from '../types';
-import type { SabotageType } from '../game-rules/sabotage';
-import type { VoiceJoinResult, VoiceRoster, VoiceSignal } from '../game-rules/voice';
+import type { SabotageType } from '../rules/sabotage';
+import type { VoiceJoinResult, VoiceRoster, VoiceSignal } from '../rules/voice';
 
 /** Client → server event names. Never write these strings elsewhere. */
 export const C2S = {

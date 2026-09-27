@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Appearance, PublicRoomList, PublicRoomSummary } from '@nizhal/shared';
+import type { Appearance, PublicRoomList, PublicRoomSummary } from '@muchiri/shared';
 import { useAuth } from '@/state/authStore';
 import { useConnection } from '@/state/connectionStore';
 import { useUi } from '@/state/uiStore';

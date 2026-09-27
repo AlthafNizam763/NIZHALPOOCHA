@@ -1,6 +1,6 @@
 'use client';
 import { create } from 'zustand';
-import type { VoiceChannel, VoicePeer } from '@nizhal/shared';
+import type { VoiceChannel, VoicePeer } from '@muchiri/shared';
 
 export type VoiceError = 'denied' | 'unsupported' | 'insecure' | 'nomic' | 'server';
 

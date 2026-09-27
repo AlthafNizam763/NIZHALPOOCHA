@@ -15,8 +15,8 @@ per region; horizontal scaling would need sticky sessions plus a shared room dir
 **Docker (any host):**
 
 ```bash
-docker build -f server/Dockerfile -t nizhalpoocha-server .
-docker run -p 4000:4000 --env-file server/.env nizhalpoocha-server
+docker build -f server/Dockerfile -t muchiri-server .
+docker run -p 4000:4000 --env-file server/.env muchiri-server
 ```
 
 **Render / Railway without Docker:**
@@ -46,7 +46,7 @@ or Nginx in front with WebSocket upgrade enabled.
 The web app is a static export, so any static host works.
 
 - Import the repo in Vercel, **Root Directory: `web`**, framework preset: Next.js.
-- Install command: `cd .. && npm ci` (so the `@nizhal/shared` workspace is available).
+- Install command: `cd .. && npm ci` (so the `@muchiri/shared` workspace is available).
 - Build command: `next build` (output directory `out`).
 - Environment variables: every `NEXT_PUBLIC_*` value from `web/.env.example`, with
   `NEXT_PUBLIC_SERVER_URL=https://<your game server>`.

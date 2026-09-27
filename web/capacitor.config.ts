@@ -23,8 +23,8 @@ const pluginsFor = (nativeConfig: string) => (existsSync(join(__dirname, nativeC
 const localHttp = process.env.CAP_LOCAL_HTTP === 'true';
 
 const config: CapacitorConfig = {
-  appId: 'com.nizhalpoocha.game',
-  appName: 'Nizhalpoocha',
+  appId: 'com.muchiri.game',
+  appName: 'Muchiri',
   webDir: 'out',
   backgroundColor: '#0e1512',
   server: localHttp ? { androidScheme: 'http', cleartext: true } : { androidScheme: 'https' },

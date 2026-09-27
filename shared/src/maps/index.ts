@@ -1,5 +1,5 @@
-import { MAP_IDS, type MapId } from '../game-rules/settings';
-import { SABOTAGE_DEFS, SABOTAGE_TYPES, type SabotageType } from '../game-rules/sabotage';
+import { MAP_IDS, type MapId } from '../rules/settings';
+import { SABOTAGE_DEFS, SABOTAGE_TYPES, type SabotageType } from '../rules/sabotage';
 import { KADALIMUKKU_OLD_TOWN } from './oldTown';
 import { KADALIMUKKU_NEW_TOWN } from './newTown';
 import { BACKWATER_VILLAGE } from './backwater';

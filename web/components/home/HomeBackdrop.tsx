@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { randomAppearance, type Appearance } from '@nizhal/shared';
+import { randomAppearance, type Appearance } from '@muchiri/shared';
 import { CHAR_H, CHAR_W, drawCharacter } from '@/game/art/character';
 import { useSettings } from '@/state/settingsStore';
 
@@ -249,7 +249,7 @@ export function HomeBackdrop({ calm = false }: { calm?: boolean }) {
         ctx.fill();
       }
 
-      // The Nizhalpoocha watches: eyes blink open in the dark, then vanish.
+      // The Muchiri watches: eyes blink open in the dark, then vanish.
       if (eyes.start < 0 && now > eyes.next) {
         eyes = { x: rand(0.08, 0.92) * w, y: rand(0.78, 0.9) * h, start: now, next: 0 };
       }

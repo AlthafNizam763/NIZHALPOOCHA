@@ -1,5 +1,5 @@
-import type { CatLimits, Role, Team } from '../game-rules/roles';
-import type { GameMode } from '../game-rules/settings';
+import type { CatLimits, Role, Team } from '../rules/roles';
+import type { GameMode } from '../rules/settings';
 import type { WinReason } from '../types';
 
 export interface WinInput {

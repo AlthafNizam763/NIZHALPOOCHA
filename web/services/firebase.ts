@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
 import { connectDatabaseEmulator, getDatabase, type Database } from 'firebase/database';
+import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -42,6 +43,7 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let rtdb: Database | null = null;
+let storage: FirebaseStorage | null = null;
 
 export function fbApp(): FirebaseApp {
   if (!firebaseEnabled) throw new Error('Firebase is not configured');
@@ -86,4 +88,14 @@ export function fbRtdb(): Database | null {
     if (usingEmulators) connectDatabaseEmulator(rtdb, emulatorHost, 9000);
   }
   return rtdb;
+}
+
+/** Cloud Storage for avatars and profile media (see firebase/storage.rules). Null without a bucket. */
+export function fbStorage(): FirebaseStorage | null {
+  if (!firebaseConfig.storageBucket) return null;
+  if (!storage) {
+    storage = getStorage(fbApp());
+    if (usingEmulators) connectStorageEmulator(storage, emulatorHost, 9199);
+  }
+  return storage;
 }

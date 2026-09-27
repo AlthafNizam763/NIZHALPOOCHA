@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import type { Appearance } from '@nizhal/shared';
+import type { Appearance } from '@muchiri/shared';
 import { CHAR_H, CHAR_W, drawCharacter, type Mood } from '@/game/art/character';
 
 /**

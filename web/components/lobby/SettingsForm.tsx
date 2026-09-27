@@ -1,6 +1,6 @@
 'use client';
 import { useState, type ReactNode } from 'react';
-import { ALL_MAPS, SETTINGS_BOUNDS, catLimitsFor, getMap, getMode, mapSupportsMode, type RoomSettings } from '@nizhal/shared';
+import { ALL_MAPS, SETTINGS_BOUNDS, catLimitsFor, getMap, getMode, mapSupportsMode, type RoomSettings } from '@muchiri/shared';
 import { useT } from '@/hooks/useT';
 import { Stepper, Toggle } from '@/components/ui/Controls';
 import type { I18nKey } from '@/utils/i18n';
